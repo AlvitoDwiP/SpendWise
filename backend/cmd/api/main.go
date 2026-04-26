@@ -4,9 +4,9 @@ import (
 	"log"
 
 	"SpendWise/config"
-	"SpendWise/handlers"
 	"SpendWise/middlewares"
 	"SpendWise/models"
+	"SpendWise/routes"
 
 	"github.com/gin-gonic/gin"
 )
@@ -27,19 +27,12 @@ func main() {
 
 	router := gin.Default()
 
-	authHandler := handlers.NewAuthHandler(db)
-	categoryHandler := handlers.NewCategoryHandler(db)
-	transactionHandler := handlers.NewTransactionHandler(db)
+	routes.RegisterAuthRoutes(router, db)
 
-	router.POST("/auth/register", authHandler.Register)
-	router.POST("/auth/login", authHandler.Login)
-
-	api := router.Group("/")
-	api.Use(middlewares.AuthMiddleware())
-	api.POST("/categories", categoryHandler.CreateCategory)
-	api.GET("/categories", categoryHandler.GetCategories)
-	api.POST("/transactions", transactionHandler.CreateTransaction)
-	api.GET("/transactions/recent", transactionHandler.GetRecentTransactions)
+	protected := router.Group("/")
+	protected.Use(middlewares.AuthMiddleware())
+	routes.RegisterCategoryRoutes(protected, db)
+	routes.RegisterTransactionRoutes(protected, db)
 
 	log.Println("API server running on port 8080")
 	if err := router.Run(":8080"); err != nil {
