@@ -40,13 +40,18 @@ func NewCategoryHandler(db *gorm.DB) *CategoryHandler {
 }
 
 func (h *CategoryHandler) CreateCategory(c *gin.Context) {
+	userID, ok := utils.GetUserIDFromContext(c)
+	if !ok {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
 	var request createCategoryRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		utils.ErrorResponse(c, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
-	userID := utils.GetDummyUserID()
 	category, err := services.CreateCategory(h.DB, userID, request.Name, request.Type, request.Icon, request.Color)
 	if err != nil {
 		utils.ErrorResponse(c, statusFromError(err), err.Error())
@@ -57,7 +62,12 @@ func (h *CategoryHandler) CreateCategory(c *gin.Context) {
 }
 
 func (h *CategoryHandler) GetCategories(c *gin.Context) {
-	userID := utils.GetDummyUserID()
+	userID, ok := utils.GetUserIDFromContext(c)
+	if !ok {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
 	categories, err := services.GetCategoriesByUserID(h.DB, userID)
 	if err != nil {
 		utils.ErrorResponse(c, statusFromError(err), err.Error())

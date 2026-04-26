@@ -45,6 +45,12 @@ func NewTransactionHandler(db *gorm.DB) *TransactionHandler {
 }
 
 func (h *TransactionHandler) CreateTransaction(c *gin.Context) {
+	userID, ok := utils.GetUserIDFromContext(c)
+	if !ok {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
 	var request createTransactionRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		utils.ErrorResponse(c, http.StatusBadRequest, "invalid request body")
@@ -57,7 +63,6 @@ func (h *TransactionHandler) CreateTransaction(c *gin.Context) {
 		return
 	}
 
-	userID := utils.GetDummyUserID()
 	transaction, err := services.CreateTransaction(
 		h.DB,
 		userID,
@@ -77,6 +82,12 @@ func (h *TransactionHandler) CreateTransaction(c *gin.Context) {
 }
 
 func (h *TransactionHandler) GetRecentTransactions(c *gin.Context) {
+	userID, ok := utils.GetUserIDFromContext(c)
+	if !ok {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
 	limit := 10
 	if value := c.Query("limit"); value != "" {
 		parsedLimit, err := strconv.Atoi(value)
@@ -87,7 +98,6 @@ func (h *TransactionHandler) GetRecentTransactions(c *gin.Context) {
 		limit = parsedLimit
 	}
 
-	userID := utils.GetDummyUserID()
 	transactions, err := services.GetRecentTransactionsByUserID(h.DB, userID, limit)
 	if err != nil {
 		utils.ErrorResponse(c, statusFromError(err), err.Error())

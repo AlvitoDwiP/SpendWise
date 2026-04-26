@@ -36,6 +36,11 @@ type authUserResponse struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+type loginResponse struct {
+	User  authUserResponse `json:"user"`
+	Token string           `json:"token"`
+}
+
 func NewAuthHandler(db *gorm.DB) *AuthHandler {
 	return &AuthHandler{DB: db}
 }
@@ -69,7 +74,16 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusOK, "login success", toAuthUserResponse(*user))
+	token, err := utils.GenerateToken(user.ID, user.Email)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "failed to generate token")
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "login success", loginResponse{
+		User:  toAuthUserResponse(*user),
+		Token: token,
+	})
 }
 
 func toAuthUserResponse(user models.User) authUserResponse {
