@@ -46,7 +46,7 @@ func (h *CategoryHandler) CreateCategory(c *gin.Context) {
 		return
 	}
 
-	userID := uint(1)
+	userID := utils.GetDummyUserID()
 	category, err := services.CreateCategory(h.DB, userID, request.Name, request.Type, request.Icon, request.Color)
 	if err != nil {
 		utils.ErrorResponse(c, statusFromError(err), err.Error())
@@ -57,7 +57,7 @@ func (h *CategoryHandler) CreateCategory(c *gin.Context) {
 }
 
 func (h *CategoryHandler) GetCategories(c *gin.Context) {
-	userID := uint(1)
+	userID := utils.GetDummyUserID()
 	categories, err := services.GetCategoriesByUserID(h.DB, userID)
 	if err != nil {
 		utils.ErrorResponse(c, statusFromError(err), err.Error())

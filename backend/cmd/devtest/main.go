@@ -6,7 +6,9 @@ import (
 
 	"SpendWise/config"
 	"SpendWise/models"
+	"SpendWise/repositories"
 	"SpendWise/services"
+	"SpendWise/utils"
 
 	"gorm.io/gorm"
 )
@@ -27,13 +29,16 @@ func main() {
 
 	log.Println("Database connected and migrated successfully")
 
+	authTestEmail := "auth-test@example.com"
 	testEmail := "test-spendwise@example.com"
 	otherTestEmail := "test-spendwise-other@example.com"
-	for _, email := range []string{testEmail, otherTestEmail} {
+	for _, email := range []string{authTestEmail, testEmail, otherTestEmail} {
 		if err := deleteTestUser(db, email); err != nil {
 			log.Fatal(err)
 		}
 	}
+
+	runAuthServiceTests(db, authTestEmail)
 
 	user := models.User{
 		Name:         "SpendWise Test User",
@@ -111,6 +116,60 @@ func main() {
 		log.Printf("negative test passed: category owned by another user failed: %v", err)
 	} else {
 		log.Fatal("negative test failed: category owned by another user should fail")
+	}
+}
+
+func runAuthServiceTests(db *gorm.DB, email string) {
+	password := "strong-password"
+
+	registeredUser, err := services.Register(db, "Auth Test User", email, password)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if registeredUser.PasswordHash != "" {
+		log.Fatal("auth register failed: password hash should not be returned")
+	}
+
+	storedUser, err := repositories.GetUserByEmail(db, email)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if storedUser.PasswordHash == "" {
+		log.Fatal("auth register failed: stored password hash is empty")
+	}
+	if storedUser.PasswordHash == password {
+		log.Fatal("auth register failed: password was stored as plain text")
+	}
+	if !utils.CheckPasswordHash(password, storedUser.PasswordHash) {
+		log.Fatal("auth register failed: stored password hash does not match password")
+	}
+	log.Printf("auth register passed: id=%d email=%s", registeredUser.ID, registeredUser.Email)
+
+	loggedInUser, err := services.Login(db, email, password)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if loggedInUser.PasswordHash != "" {
+		log.Fatal("auth login failed: password hash should not be returned")
+	}
+	log.Printf("auth login passed: id=%d email=%s", loggedInUser.ID, loggedInUser.Email)
+
+	if _, err := services.Login(db, email, "wrong-password"); err != nil {
+		log.Printf("auth negative test passed: wrong password failed: %v", err)
+	} else {
+		log.Fatal("auth negative test failed: wrong password should fail")
+	}
+
+	if _, err := services.Register(db, "Duplicate Auth Test User", email, "another-password"); err != nil {
+		log.Printf("auth negative test passed: duplicate email failed: %v", err)
+	} else {
+		log.Fatal("auth negative test failed: duplicate email should fail")
+	}
+
+	if _, err := services.Register(db, "Short Password User", "auth-short@example.com", "12345"); err != nil {
+		log.Printf("auth negative test passed: short password failed: %v", err)
+	} else {
+		log.Fatal("auth negative test failed: short password should fail")
 	}
 }
 

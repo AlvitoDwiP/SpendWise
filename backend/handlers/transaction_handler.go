@@ -57,7 +57,7 @@ func (h *TransactionHandler) CreateTransaction(c *gin.Context) {
 		return
 	}
 
-	userID := uint(1)
+	userID := utils.GetDummyUserID()
 	transaction, err := services.CreateTransaction(
 		h.DB,
 		userID,
@@ -87,7 +87,7 @@ func (h *TransactionHandler) GetRecentTransactions(c *gin.Context) {
 		limit = parsedLimit
 	}
 
-	userID := uint(1)
+	userID := utils.GetDummyUserID()
 	transactions, err := services.GetRecentTransactionsByUserID(h.DB, userID, limit)
 	if err != nil {
 		utils.ErrorResponse(c, statusFromError(err), err.Error())
