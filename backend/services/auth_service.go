@@ -13,7 +13,7 @@ import (
 
 const minPasswordLength = 6
 
-var errInvalidEmailOrPassword = errors.New("invalid email or password")
+var ErrInvalidEmailOrPassword = errors.New("invalid email or password")
 
 func Register(db *gorm.DB, name string, email string, password string) (*models.User, error) {
 	name = strings.TrimSpace(name)
@@ -69,13 +69,13 @@ func Login(db *gorm.DB, email string, password string) (*models.User, error) {
 
 	user, err := repositories.GetUserByEmail(db, email)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, errInvalidEmailOrPassword
+		return nil, ErrInvalidEmailOrPassword
 	}
 	if err != nil {
 		return nil, err
 	}
 	if !utils.CheckPasswordHash(password, user.PasswordHash) {
-		return nil, errInvalidEmailOrPassword
+		return nil, ErrInvalidEmailOrPassword
 	}
 
 	return sanitizeUser(user), nil

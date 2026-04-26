@@ -26,9 +26,12 @@ func main() {
 
 	router := gin.Default()
 
+	authHandler := handlers.NewAuthHandler(db)
 	categoryHandler := handlers.NewCategoryHandler(db)
 	transactionHandler := handlers.NewTransactionHandler(db)
 
+	router.POST("/auth/register", authHandler.Register)
+	router.POST("/auth/login", authHandler.Login)
 	router.POST("/categories", categoryHandler.CreateCategory)
 	router.GET("/categories", categoryHandler.GetCategories)
 	router.POST("/transactions", transactionHandler.CreateTransaction)
