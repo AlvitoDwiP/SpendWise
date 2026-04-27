@@ -2,12 +2,14 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"SpendWise/config"
 	"SpendWise/middlewares"
 	"SpendWise/models"
 	"SpendWise/routes"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -26,6 +28,31 @@ func main() {
 	}
 
 	router := gin.Default()
+
+	frontendURL := config.GetEnv("FRONTEND_URL", "http://localhost:3000")
+
+	router.Use(cors.New(cors.Config{
+		AllowOrigins: []string{
+			frontendURL,
+		},
+		AllowMethods: []string{
+			"GET",
+			"POST",
+			"PUT",
+			"DELETE",
+			"OPTIONS",
+		},
+		AllowHeaders: []string{
+			"Origin",
+			"Content-Type",
+			"Authorization",
+		},
+		ExposeHeaders: []string{
+			"Content-Length",
+		},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	routes.RegisterAuthRoutes(router, db)
 
