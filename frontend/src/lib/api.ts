@@ -183,7 +183,6 @@ export async function login(payload: LoginPayload): Promise<LoginResponse> {
     },
   );
 
-  setToken(response.data.token);
   return response.data;
 }
 

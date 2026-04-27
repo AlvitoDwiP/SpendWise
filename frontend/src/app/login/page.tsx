@@ -1,0 +1,113 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { FormEvent, useState } from "react";
+
+import { login, setToken } from "@/lib/api";
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError("");
+
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail || !password) {
+      setError("Email and password are required.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await login({
+        email: trimmedEmail,
+        password,
+      });
+      setToken(response.token);
+      router.push("/dashboard");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Login failed.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-slate-50 px-6 py-12 text-slate-950">
+      <section className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
+        <div className="mb-8">
+          <p className="text-sm font-medium text-emerald-700">SpendWise</p>
+          <h1 className="mt-2 text-2xl font-semibold">Sign in</h1>
+          <p className="mt-2 text-sm text-slate-600">
+            Continue to your spending dashboard.
+          </p>
+        </div>
+
+        <form className="space-y-5" onSubmit={handleSubmit}>
+          <div>
+            <label
+              className="mb-2 block text-sm font-medium text-slate-700"
+              htmlFor="email"
+            >
+              Email
+            </label>
+            <input
+              autoComplete="email"
+              className="h-11 w-full rounded-md border border-slate-300 px-3 text-sm outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+              id="email"
+              name="email"
+              onChange={(event) => setEmail(event.target.value)}
+              type="email"
+              value={email}
+            />
+          </div>
+
+          <div>
+            <label
+              className="mb-2 block text-sm font-medium text-slate-700"
+              htmlFor="password"
+            >
+              Password
+            </label>
+            <input
+              autoComplete="current-password"
+              className="h-11 w-full rounded-md border border-slate-300 px-3 text-sm outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+              id="password"
+              name="password"
+              onChange={(event) => setPassword(event.target.value)}
+              type="password"
+              value={password}
+            />
+          </div>
+
+          {error ? (
+            <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {error}
+            </p>
+          ) : null}
+
+          <button
+            className="h-11 w-full rounded-md bg-emerald-700 px-4 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+            disabled={isSubmitting}
+            type="submit"
+          >
+            {isSubmitting ? "Signing in..." : "Sign in"}
+          </button>
+        </form>
+
+        <p className="mt-6 text-center text-sm text-slate-600">
+          New to SpendWise?{" "}
+          <Link className="font-medium text-emerald-700" href="/register">
+            Create an account
+          </Link>
+        </p>
+      </section>
+    </main>
+  );
+}
