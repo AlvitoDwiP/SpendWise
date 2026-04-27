@@ -137,12 +137,9 @@ func validateTransactionInput(db *gorm.DB, userID uint, categoryID uint, transac
 		return nil, "", errors.New("transaction date is required")
 	}
 
-	category, err := repositories.GetCategoryByID(db, categoryID)
+	category, err := repositories.GetCategoryByIDAndUserID(db, categoryID, userID)
 	if err != nil {
 		return nil, "", err
-	}
-	if category.UserID != userID {
-		return nil, "", errors.New("category does not belong to user")
 	}
 	if category.Type != transactionType {
 		return nil, "", errors.New("category type does not match transaction type")

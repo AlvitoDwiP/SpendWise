@@ -3,9 +3,8 @@ package handlers
 import (
 	"errors"
 	"net/http"
-	"time"
 
-	"SpendWise/models"
+	"SpendWise/dto"
 	"SpendWise/services"
 	"SpendWise/utils"
 
@@ -28,16 +27,8 @@ type loginRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
-type authUserResponse struct {
-	ID        uint      `json:"id"`
-	Name      string    `json:"name"`
-	Email     string    `json:"email"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-}
-
 type loginResponse struct {
-	User  authUserResponse `json:"user"`
+	User  dto.UserResponse `json:"user"`
 	Token string           `json:"token"`
 }
 
@@ -58,7 +49,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusCreated, "user registered", toAuthUserResponse(*user))
+	utils.SuccessResponse(c, http.StatusCreated, "user registered", dto.ToUserResponse(user))
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {
@@ -81,19 +72,9 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	utils.SuccessResponse(c, http.StatusOK, "login success", loginResponse{
-		User:  toAuthUserResponse(*user),
+		User:  dto.ToUserResponse(user),
 		Token: token,
 	})
-}
-
-func toAuthUserResponse(user models.User) authUserResponse {
-	return authUserResponse{
-		ID:        user.ID,
-		Name:      user.Name,
-		Email:     user.Email,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
-	}
 }
 
 func authStatusFromError(err error) int {

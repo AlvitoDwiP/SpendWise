@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"SpendWise/models"
+	"SpendWise/dto"
 	"SpendWise/services"
 	"SpendWise/utils"
 
@@ -33,20 +33,6 @@ type createTransactionRequest struct {
 	TransactionDate string `json:"transaction_date" binding:"required"`
 }
 
-type transactionResponse struct {
-	ID              uint              `json:"id"`
-	UserID          uint              `json:"user_id"`
-	CategoryID      uint              `json:"category_id"`
-	Type            string            `json:"type"`
-	Amount          int64             `json:"amount"`
-	Title           string            `json:"title"`
-	Note            string            `json:"note"`
-	TransactionDate time.Time         `json:"transaction_date"`
-	Category        *categoryResponse `json:"category,omitempty"`
-	CreatedAt       time.Time         `json:"created_at"`
-	UpdatedAt       time.Time         `json:"updated_at"`
-}
-
 func NewTransactionHandler(db *gorm.DB) *TransactionHandler {
 	return &TransactionHandler{DB: db}
 }
@@ -70,7 +56,7 @@ func (h *TransactionHandler) GetTransactions(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusOK, "transactions loaded", toTransactionResponses(transactions))
+	utils.SuccessResponse(c, http.StatusOK, "transactions loaded", dto.ToTransactionResponses(transactions))
 }
 
 func (h *TransactionHandler) GetTransactionByID(c *gin.Context) {
@@ -92,7 +78,7 @@ func (h *TransactionHandler) GetTransactionByID(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusOK, "transaction loaded", toTransactionResponse(*transaction))
+	utils.SuccessResponse(c, http.StatusOK, "transaction loaded", dto.ToTransactionResponse(transaction))
 }
 
 func (h *TransactionHandler) CreateTransaction(c *gin.Context) {
@@ -129,7 +115,7 @@ func (h *TransactionHandler) CreateTransaction(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusCreated, "transaction created", toTransactionResponse(*transaction))
+	utils.SuccessResponse(c, http.StatusCreated, "transaction created", dto.ToTransactionResponse(transaction))
 }
 
 func (h *TransactionHandler) UpdateTransaction(c *gin.Context) {
@@ -173,7 +159,7 @@ func (h *TransactionHandler) UpdateTransaction(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusOK, "transaction updated", toTransactionResponse(*transaction))
+	utils.SuccessResponse(c, http.StatusOK, "transaction updated", dto.ToTransactionResponse(transaction))
 }
 
 func (h *TransactionHandler) DeleteTransaction(c *gin.Context) {
@@ -220,7 +206,7 @@ func (h *TransactionHandler) GetRecentTransactions(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusOK, "recent transactions loaded", toTransactionResponses(transactions))
+	utils.SuccessResponse(c, http.StatusOK, "recent transactions loaded", dto.ToTransactionResponses(transactions))
 }
 
 func parseTransactionID(c *gin.Context) (uint, error) {
@@ -262,35 +248,4 @@ func parseTransactionPagination(c *gin.Context) (int, int, error) {
 	}
 
 	return limit, offset, nil
-}
-
-func toTransactionResponses(transactions []models.Transaction) []transactionResponse {
-	response := make([]transactionResponse, 0, len(transactions))
-	for _, transaction := range transactions {
-		response = append(response, toTransactionResponse(transaction))
-	}
-
-	return response
-}
-
-func toTransactionResponse(transaction models.Transaction) transactionResponse {
-	response := transactionResponse{
-		ID:              transaction.ID,
-		UserID:          transaction.UserID,
-		CategoryID:      transaction.CategoryID,
-		Type:            transaction.Type,
-		Amount:          transaction.Amount,
-		Title:           transaction.Title,
-		Note:            transaction.Note,
-		TransactionDate: transaction.TransactionDate,
-		CreatedAt:       transaction.CreatedAt,
-		UpdatedAt:       transaction.UpdatedAt,
-	}
-
-	if transaction.Category.ID != 0 {
-		category := toCategoryResponse(transaction.Category)
-		response.Category = &category
-	}
-
-	return response
 }

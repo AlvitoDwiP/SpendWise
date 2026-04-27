@@ -3,9 +3,9 @@ package handlers
 import (
 	"errors"
 	"net/http"
-	"time"
+	"strconv"
 
-	"SpendWise/models"
+	"SpendWise/dto"
 	"SpendWise/services"
 	"SpendWise/utils"
 
@@ -17,22 +17,11 @@ type CategoryHandler struct {
 	DB *gorm.DB
 }
 
-type createCategoryRequest struct {
+type categoryRequest struct {
 	Name  string `json:"name" binding:"required"`
 	Type  string `json:"type" binding:"required"`
 	Icon  string `json:"icon"`
 	Color string `json:"color"`
-}
-
-type categoryResponse struct {
-	ID        uint      `json:"id"`
-	UserID    uint      `json:"user_id"`
-	Name      string    `json:"name"`
-	Type      string    `json:"type"`
-	Icon      string    `json:"icon"`
-	Color     string    `json:"color"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
 }
 
 func NewCategoryHandler(db *gorm.DB) *CategoryHandler {
@@ -46,7 +35,7 @@ func (h *CategoryHandler) CreateCategory(c *gin.Context) {
 		return
 	}
 
-	var request createCategoryRequest
+	var request categoryRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		utils.ErrorResponse(c, http.StatusBadRequest, "invalid request body")
 		return
@@ -58,7 +47,7 @@ func (h *CategoryHandler) CreateCategory(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusCreated, "category created", toCategoryResponse(*category))
+	utils.SuccessResponse(c, http.StatusCreated, "category created", dto.ToCategoryResponse(category))
 }
 
 func (h *CategoryHandler) GetCategories(c *gin.Context) {
@@ -74,30 +63,96 @@ func (h *CategoryHandler) GetCategories(c *gin.Context) {
 		return
 	}
 
-	response := make([]categoryResponse, 0, len(categories))
-	for _, category := range categories {
-		response = append(response, toCategoryResponse(category))
-	}
-
-	utils.SuccessResponse(c, http.StatusOK, "categories loaded", response)
+	utils.SuccessResponse(c, http.StatusOK, "categories loaded", dto.ToCategoryResponses(categories))
 }
 
-func toCategoryResponse(category models.Category) categoryResponse {
-	return categoryResponse{
-		ID:        category.ID,
-		UserID:    category.UserID,
-		Name:      category.Name,
-		Type:      category.Type,
-		Icon:      category.Icon,
-		Color:     category.Color,
-		CreatedAt: category.CreatedAt,
-		UpdatedAt: category.UpdatedAt,
+func (h *CategoryHandler) GetCategoryByID(c *gin.Context) {
+	userID, ok := utils.GetUserIDFromContext(c)
+	if !ok {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "unauthorized")
+		return
 	}
+
+	categoryID, err := parseCategoryID(c)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	category, err := services.GetCategoryByID(h.DB, userID, categoryID)
+	if err != nil {
+		utils.ErrorResponse(c, statusFromError(err), err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "category loaded", dto.ToCategoryResponse(category))
+}
+
+func (h *CategoryHandler) UpdateCategory(c *gin.Context) {
+	userID, ok := utils.GetUserIDFromContext(c)
+	if !ok {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	categoryID, err := parseCategoryID(c)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	var request categoryRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	category, err := services.UpdateCategory(h.DB, userID, categoryID, request.Name, request.Type, request.Icon, request.Color)
+	if err != nil {
+		utils.ErrorResponse(c, statusFromError(err), err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "category updated", dto.ToCategoryResponse(category))
+}
+
+func (h *CategoryHandler) DeleteCategory(c *gin.Context) {
+	userID, ok := utils.GetUserIDFromContext(c)
+	if !ok {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	categoryID, err := parseCategoryID(c)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if err := services.DeleteCategory(h.DB, userID, categoryID); err != nil {
+		utils.ErrorResponse(c, statusFromError(err), err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "category deleted", nil)
+}
+
+func parseCategoryID(c *gin.Context) (uint, error) {
+	value := c.Param("id")
+	id, err := strconv.ParseUint(value, 10, 64)
+	if err != nil || id == 0 {
+		return 0, errors.New("category id must be a positive number")
+	}
+
+	return uint(id), nil
 }
 
 func statusFromError(err error) int {
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return http.StatusNotFound
+	}
+	if errors.Is(err, services.ErrCategoryInUse) {
+		return http.StatusBadRequest
 	}
 
 	return http.StatusBadRequest

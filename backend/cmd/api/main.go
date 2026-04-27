@@ -31,6 +31,7 @@ func main() {
 
 	protected := router.Group("/")
 	protected.Use(middlewares.AuthMiddleware())
+	routes.RegisterUserRoutes(protected, db)
 	routes.RegisterCategoryRoutes(protected, db)
 	routes.RegisterTransactionRoutes(protected, db)
 	routes.RegisterDashboardRoutes(protected, db)

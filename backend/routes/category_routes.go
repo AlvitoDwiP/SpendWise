@@ -12,4 +12,7 @@ func RegisterCategoryRoutes(router *gin.RouterGroup, db *gorm.DB) {
 
 	router.POST("/categories", categoryHandler.CreateCategory)
 	router.GET("/categories", categoryHandler.GetCategories)
+	router.GET("/categories/:id", categoryHandler.GetCategoryByID)
+	router.PUT("/categories/:id", categoryHandler.UpdateCategory)
+	router.DELETE("/categories/:id", categoryHandler.DeleteCategory)
 }
