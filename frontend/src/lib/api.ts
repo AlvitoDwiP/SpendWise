@@ -1,5 +1,354 @@
-import axios from "axios";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+const TOKEN_STORAGE_KEY = "spendwise_token";
 
-export const api = axios.create({
-  baseURL: "http://localhost:8080",
-});
+type ApiSuccessResponse<T> = {
+  success: true;
+  message: string;
+  data: T;
+};
+
+type ApiErrorResponse = {
+  success: false;
+  message: string;
+};
+
+type QueryParams = Record<string, string | number | boolean | null | undefined>;
+
+export type User = {
+  id: number;
+  name: string;
+  email: string;
+};
+
+export type CategoryType = "income" | "expense";
+
+export type Category = {
+  id: number;
+  name: string;
+  type: CategoryType;
+  icon: string;
+  color: string;
+};
+
+export type Transaction = {
+  id: number;
+  category_id: number;
+  type: CategoryType;
+  amount: number;
+  title: string;
+  note: string;
+  transaction_date: string;
+  category?: Category;
+};
+
+export type DashboardSummary = {
+  current_balance: number;
+  this_month_income: number;
+  this_month_expense: number;
+  this_month_transaction_count: number;
+};
+
+export type MonthlyReportItem = {
+  month: number;
+  income: number;
+  expense: number;
+};
+
+export type MonthlyReport = {
+  year: number;
+  months: MonthlyReportItem[];
+};
+
+export type PaginationMeta = {
+  limit: number;
+  offset: number;
+  total: number;
+};
+
+export type PaginatedResponse<T> = {
+  items: T[];
+  pagination: PaginationMeta;
+};
+
+export type RegisterPayload = {
+  name: string;
+  email: string;
+  password: string;
+};
+
+export type LoginPayload = {
+  email: string;
+  password: string;
+};
+
+export type LoginResponse = {
+  user: User;
+  token: string;
+};
+
+export type CategoryPayload = {
+  name: string;
+  type: CategoryType;
+  icon?: string;
+  color?: string;
+};
+
+export type TransactionPayload = {
+  category_id: number;
+  type: CategoryType;
+  amount: number;
+  title: string;
+  note?: string;
+  transaction_date: string;
+};
+
+export type TransactionListParams = {
+  limit?: number;
+  offset?: number;
+  type?: CategoryType;
+  category_id?: number;
+  start_date?: string;
+  end_date?: string;
+};
+
+export function getToken(): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  return window.localStorage.getItem(TOKEN_STORAGE_KEY);
+}
+
+export function setToken(token: string): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(TOKEN_STORAGE_KEY, token);
+}
+
+export function removeToken(): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.removeItem(TOKEN_STORAGE_KEY);
+}
+
+export async function apiRequest<T>(
+  path: string,
+  options: RequestInit = {},
+): Promise<T> {
+  const headers = new Headers(options.headers);
+  const token = getToken();
+
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+  if (options.body && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  const response = await fetch(buildUrl(path), {
+    ...options,
+    headers,
+  });
+
+  if (!response.ok) {
+    throw new Error(await getErrorMessage(response));
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  return response.json() as Promise<T>;
+}
+
+export async function register(payload: RegisterPayload): Promise<User> {
+  const response = await apiRequest<ApiSuccessResponse<User>>("/auth/register", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+
+  return response.data;
+}
+
+export async function login(payload: LoginPayload): Promise<LoginResponse> {
+  const response = await apiRequest<ApiSuccessResponse<LoginResponse>>(
+    "/auth/login",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+  );
+
+  setToken(response.data.token);
+  return response.data;
+}
+
+export async function getMe(): Promise<User> {
+  const response = await apiRequest<ApiSuccessResponse<User>>("/me");
+
+  return response.data;
+}
+
+export async function getDashboardSummary(): Promise<DashboardSummary> {
+  const response =
+    await apiRequest<ApiSuccessResponse<DashboardSummary>>("/dashboard/summary");
+
+  return response.data;
+}
+
+export async function getCategories(): Promise<Category[]> {
+  const response =
+    await apiRequest<ApiSuccessResponse<Category[]>>("/categories");
+
+  return response.data;
+}
+
+export async function getCategoryById(id: number): Promise<Category> {
+  const response = await apiRequest<ApiSuccessResponse<Category>>(
+    `/categories/${id}`,
+  );
+
+  return response.data;
+}
+
+export async function createCategory(
+  payload: CategoryPayload,
+): Promise<Category> {
+  const response = await apiRequest<ApiSuccessResponse<Category>>(
+    "/categories",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+  );
+
+  return response.data;
+}
+
+export async function updateCategory(
+  id: number,
+  payload: CategoryPayload,
+): Promise<Category> {
+  const response = await apiRequest<ApiSuccessResponse<Category>>(
+    `/categories/${id}`,
+    {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    },
+  );
+
+  return response.data;
+}
+
+export async function deleteCategory(id: number): Promise<void> {
+  await apiRequest<ApiSuccessResponse<null>>(`/categories/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export async function getTransactions(
+  params: TransactionListParams = {},
+): Promise<PaginatedResponse<Transaction>> {
+  return apiRequest<PaginatedResponse<Transaction>>(
+    withQuery("/transactions", params),
+  );
+}
+
+export async function getTransactionById(id: number): Promise<Transaction> {
+  const response = await apiRequest<ApiSuccessResponse<Transaction>>(
+    `/transactions/${id}`,
+  );
+
+  return response.data;
+}
+
+export async function createTransaction(
+  payload: TransactionPayload,
+): Promise<Transaction> {
+  const response = await apiRequest<ApiSuccessResponse<Transaction>>(
+    "/transactions",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+  );
+
+  return response.data;
+}
+
+export async function updateTransaction(
+  id: number,
+  payload: TransactionPayload,
+): Promise<Transaction> {
+  const response = await apiRequest<ApiSuccessResponse<Transaction>>(
+    `/transactions/${id}`,
+    {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    },
+  );
+
+  return response.data;
+}
+
+export async function deleteTransaction(id: number): Promise<void> {
+  await apiRequest<ApiSuccessResponse<null>>(`/transactions/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export async function getRecentTransactions(): Promise<Transaction[]> {
+  const response = await apiRequest<ApiSuccessResponse<Transaction[]>>(
+    "/transactions/recent",
+  );
+
+  return response.data;
+}
+
+export async function getMonthlyReport(year: number): Promise<MonthlyReport> {
+  const response = await apiRequest<ApiSuccessResponse<MonthlyReport>>(
+    withQuery("/reports/monthly", { year }),
+  );
+
+  return response.data;
+}
+
+function buildUrl(path: string): string {
+  if (/^https?:\/\//.test(path)) {
+    return path;
+  }
+
+  return `${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
+function withQuery(path: string, params: QueryParams): string {
+  const searchParams = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      searchParams.set(key, String(value));
+    }
+  });
+
+  const query = searchParams.toString();
+  if (!query) {
+    return path;
+  }
+
+  return `${path}${path.includes("?") ? "&" : "?"}${query}`;
+}
+
+async function getErrorMessage(response: Response): Promise<string> {
+  const fallback = `Request failed with status ${response.status}`;
+
+  try {
+    const error = (await response.json()) as Partial<ApiErrorResponse>;
+    return error.message || fallback;
+  } catch {
+    return fallback;
+  }
+}
