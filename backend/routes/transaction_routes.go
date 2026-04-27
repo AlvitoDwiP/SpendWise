@@ -10,6 +10,10 @@ import (
 func RegisterTransactionRoutes(router *gin.RouterGroup, db *gorm.DB) {
 	transactionHandler := handlers.NewTransactionHandler(db)
 
-	router.POST("/transactions", transactionHandler.CreateTransaction)
 	router.GET("/transactions/recent", transactionHandler.GetRecentTransactions)
+	router.GET("/transactions", transactionHandler.GetTransactions)
+	router.GET("/transactions/:id", transactionHandler.GetTransactionByID)
+	router.POST("/transactions", transactionHandler.CreateTransaction)
+	router.PUT("/transactions/:id", transactionHandler.UpdateTransaction)
+	router.DELETE("/transactions/:id", transactionHandler.DeleteTransaction)
 }

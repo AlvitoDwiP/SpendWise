@@ -34,6 +34,7 @@ func main() {
 	routes.RegisterCategoryRoutes(protected, db)
 	routes.RegisterTransactionRoutes(protected, db)
 	routes.RegisterDashboardRoutes(protected, db)
+	routes.RegisterReportRoutes(protected, db)
 
 	log.Println("API server running on port 8080")
 	if err := router.Run(":8080"); err != nil {
