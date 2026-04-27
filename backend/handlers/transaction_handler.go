@@ -50,13 +50,28 @@ func (h *TransactionHandler) GetTransactions(c *gin.Context) {
 		return
 	}
 
-	transactions, err := services.GetTransactionsByUserID(h.DB, userID, limit, offset)
+	filter, err := parseTransactionListFilter(c, limit, offset)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	transactions, err := services.GetTransactionsByUserID(h.DB, userID, filter)
 	if err != nil {
 		utils.ErrorResponse(c, statusFromError(err), err.Error())
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusOK, "transactions loaded", dto.ToTransactionResponses(transactions))
+	response := dto.PaginatedResponse[dto.TransactionResponse]{
+		Items: dto.ToTransactionResponses(transactions.Items),
+		Pagination: dto.PaginationMeta{
+			Limit:  limit,
+			Offset: offset,
+			Total:  transactions.Total,
+		},
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 func (h *TransactionHandler) GetTransactionByID(c *gin.Context) {
@@ -248,4 +263,64 @@ func parseTransactionPagination(c *gin.Context) (int, int, error) {
 	}
 
 	return limit, offset, nil
+}
+
+func parseTransactionListFilter(c *gin.Context, limit int, offset int) (services.TransactionListFilter, error) {
+	filter := services.TransactionListFilter{
+		Type:   c.Query("type"),
+		Limit:  limit,
+		Offset: offset,
+	}
+
+	categoryID, err := parseOptionalUintQuery(c, "category_id")
+	if err != nil {
+		return services.TransactionListFilter{}, err
+	}
+	filter.CategoryID = categoryID
+
+	startDate, err := parseOptionalDateQuery(c, "start_date")
+	if err != nil {
+		return services.TransactionListFilter{}, err
+	}
+	filter.StartDate = startDate
+
+	endDate, err := parseOptionalDateQuery(c, "end_date")
+	if err != nil {
+		return services.TransactionListFilter{}, err
+	}
+	if endDate != nil {
+		exclusiveEndDate := endDate.AddDate(0, 0, 1)
+		filter.EndDate = &exclusiveEndDate
+	}
+
+	return filter, nil
+}
+
+func parseOptionalUintQuery(c *gin.Context, key string) (*uint, error) {
+	value := c.Query(key)
+	if value == "" {
+		return nil, nil
+	}
+
+	parsed, err := strconv.ParseUint(value, 10, 64)
+	if err != nil {
+		return nil, errors.New(key + " must be a number")
+	}
+
+	result := uint(parsed)
+	return &result, nil
+}
+
+func parseOptionalDateQuery(c *gin.Context, key string) (*time.Time, error) {
+	value := c.Query(key)
+	if value == "" {
+		return nil, nil
+	}
+
+	parsed, err := time.Parse("2006-01-02", value)
+	if err != nil {
+		return nil, errors.New(key + " must be YYYY-MM-DD format")
+	}
+
+	return &parsed, nil
 }

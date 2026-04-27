@@ -11,6 +11,20 @@ import (
 	"gorm.io/gorm"
 )
 
+type PaginatedTransactions struct {
+	Items []models.Transaction
+	Total int64
+}
+
+type TransactionListFilter struct {
+	Type       string
+	CategoryID *uint
+	StartDate  *time.Time
+	EndDate    *time.Time
+	Limit      int
+	Offset     int
+}
+
 func CreateTransaction(db *gorm.DB, userID uint, categoryID uint, transactionType string, amount int64, title string, note string, transactionDate time.Time) (*models.Transaction, error) {
 	_, trimmedTitle, err := validateTransactionInput(db, userID, categoryID, transactionType, amount, title, transactionDate)
 	if err != nil {
@@ -34,18 +48,56 @@ func CreateTransaction(db *gorm.DB, userID uint, categoryID uint, transactionTyp
 	return &transaction, nil
 }
 
-func GetTransactionsByUserID(db *gorm.DB, userID uint, limit int, offset int) ([]models.Transaction, error) {
+func GetTransactionsByUserID(db *gorm.DB, userID uint, filter TransactionListFilter) (*PaginatedTransactions, error) {
 	if userID == 0 {
 		return nil, errors.New("userID is required")
 	}
-	if limit <= 0 {
+	filter.Type = strings.TrimSpace(filter.Type)
+	if filter.Type != "" && !isValidType(filter.Type) {
+		return nil, errors.New("transaction type must be income or expense")
+	}
+	if filter.CategoryID != nil {
+		if *filter.CategoryID == 0 {
+			return nil, errors.New("categoryID is required")
+		}
+		if _, err := repositories.GetCategoryByIDAndUserID(db, *filter.CategoryID, userID); err != nil {
+			return nil, err
+		}
+	}
+	if filter.Limit <= 0 {
 		return nil, errors.New("limit must be greater than 0")
 	}
-	if offset < 0 {
+	if filter.Offset < 0 {
 		return nil, errors.New("offset must be 0 or greater")
 	}
+	if filter.StartDate != nil && filter.EndDate != nil && filter.StartDate.After(*filter.EndDate) {
+		return nil, errors.New("start_date must be before or equal to end_date")
+	}
 
-	return repositories.GetTransactionsByUserIDPaginated(db, userID, limit, offset)
+	repositoryFilter := repositories.TransactionFilter{
+		UserID:     userID,
+		Type:       filter.Type,
+		CategoryID: filter.CategoryID,
+		StartDate:  filter.StartDate,
+		EndDate:    filter.EndDate,
+		Limit:      filter.Limit,
+		Offset:     filter.Offset,
+	}
+
+	items, err := repositories.GetTransactionsByFilter(db, repositoryFilter)
+	if err != nil {
+		return nil, err
+	}
+
+	total, err := repositories.CountTransactionsByFilter(db, repositoryFilter)
+	if err != nil {
+		return nil, err
+	}
+
+	return &PaginatedTransactions{
+		Items: items,
+		Total: total,
+	}, nil
 }
 
 func GetTransactionByID(db *gorm.DB, userID uint, transactionID uint) (*models.Transaction, error) {

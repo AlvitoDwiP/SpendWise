@@ -29,6 +29,36 @@ func GetTransactionsByUserIDPaginated(db *gorm.DB, userID uint, limit int, offse
 	return transactions, err
 }
 
+func CountTransactionsByUserID(db *gorm.DB, userID uint) (int64, error) {
+	var total int64
+	err := db.
+		Model(&models.Transaction{}).
+		Where("user_id = ?", userID).
+		Count(&total).Error
+
+	return total, err
+}
+
+func GetTransactionsByFilter(db *gorm.DB, filter TransactionFilter) ([]models.Transaction, error) {
+	var transactions []models.Transaction
+	err := applyTransactionFilter(db, filter).
+		Preload("Category").
+		Order("transaction_date DESC").
+		Limit(filter.Limit).
+		Offset(filter.Offset).
+		Find(&transactions).Error
+
+	return transactions, err
+}
+
+func CountTransactionsByFilter(db *gorm.DB, filter TransactionFilter) (int64, error) {
+	var total int64
+	err := applyTransactionFilter(db.Model(&models.Transaction{}), filter).
+		Count(&total).Error
+
+	return total, err
+}
+
 func GetTransactionByIDAndUserID(db *gorm.DB, id uint, userID uint) (*models.Transaction, error) {
 	var transaction models.Transaction
 	result := db.
@@ -78,6 +108,25 @@ func UpdateTransaction(db *gorm.DB, transaction *models.Transaction) error {
 	}
 
 	return nil
+}
+
+func applyTransactionFilter(query *gorm.DB, filter TransactionFilter) *gorm.DB {
+	query = query.Where("user_id = ?", filter.UserID)
+
+	if filter.Type != "" {
+		query = query.Where("type = ?", filter.Type)
+	}
+	if filter.CategoryID != nil {
+		query = query.Where("category_id = ?", *filter.CategoryID)
+	}
+	if filter.StartDate != nil {
+		query = query.Where("transaction_date >= ?", *filter.StartDate)
+	}
+	if filter.EndDate != nil {
+		query = query.Where("transaction_date < ?", *filter.EndDate)
+	}
+
+	return query
 }
 
 func DeleteTransaction(db *gorm.DB, transaction *models.Transaction) error {
