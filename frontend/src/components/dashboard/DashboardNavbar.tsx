@@ -8,6 +8,7 @@ type DashboardNavbarProps = {
   greeting: string;
   onMenuClick: () => void;
   userName: string;
+  isSidebarOpen?: boolean;
 };
 
 export function DashboardNavbar({
@@ -15,17 +16,18 @@ export function DashboardNavbar({
   greeting,
   onMenuClick,
   userName,
+  isSidebarOpen = true,
 }: DashboardNavbarProps) {
   return (
     <header className="relative z-20 hidden items-center justify-between gap-6 py-7 md:flex">
       <div className="flex min-w-0 items-center gap-4">
         <motion.button
-          aria-label="Open menu"
+          aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
           className="grid h-14 w-14 shrink-0 place-items-center rounded-full border border-white/10 bg-white/5 text-white shadow-xl shadow-black/20 backdrop-blur-md transition hover:bg-white/10"
           onClick={onMenuClick}
           type="button"
           whileHover={{ scale: 1.04 }}
-          whileTap={{ scale: 0.96 }}
+          whileTap={{ scale: 0.94 }}
         >
           <Menu className="h-6 w-6" />
         </motion.button>

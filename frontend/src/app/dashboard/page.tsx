@@ -9,6 +9,8 @@ import { BalanceStatsCards } from "../../components/dashboard/BalanceStatsCards"
 import { DashboardBackground } from "../../components/dashboard/DashboardBackground";
 import { DashboardDrawer } from "../../components/dashboard/DashboardDrawer";
 import { DashboardNavbar } from "../../components/dashboard/DashboardNavbar";
+import { DashboardSidebarCard } from "../../components/dashboard/DashboardSidebarCard";
+import { AnimatePresence } from "framer-motion";
 import {
   DashboardErrorState,
   DashboardLoadingState,
@@ -40,6 +42,7 @@ export default function DashboardPage() {
   const [dashboard, setDashboard] = useState<DashboardState | null>(null);
   const [error, setError] = useState("");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -119,20 +122,51 @@ export default function DashboardPage() {
     <main className="relative min-h-screen overflow-x-hidden bg-[#0f0f10] text-white">
       <DashboardBackground />
 
-      <div className="relative mx-auto w-full max-w-[1240px] px-5 pb-28 pt-5 md:px-8 md:pb-12 md:pt-0">
-        <DashboardNavbar
-          dateLabel={dateLabel}
-          greeting={greeting}
-          onMenuClick={() => setIsDrawerOpen(true)}
-          userName={user.name}
-        />
+      <motion.div
+        className="relative flex min-h-screen"
+        layout
+        transition={{ duration: 0.22, ease: "easeOut" }}
+      >
+        {/* Desktop Sidebar */}
+        <AnimatePresence mode="wait">
+          {isSidebarOpen && (
+            <motion.div
+              initial={{ opacity: 0, x: -24, scale: 0.98 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: -24, scale: 0.98 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+              style={{ transformOrigin: "left center" }}
+              className="hidden md:block md:pt-0 md:pb-12 md:pl-8"
+            >
+              <DashboardSidebarCard onLogout={handleLogout} />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        <motion.div
-          className="grid gap-7 lg:grid-cols-[minmax(0,1.42fr)_minmax(330px,0.78fr)]"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, ease: "easeOut" }}
-        >
+        {/* Main Content */}
+        <div className="relative mx-auto w-full flex-1 px-5 pb-28 pt-5 md:px-8 md:pb-12 md:pt-0">
+          <DashboardNavbar
+            dateLabel={dateLabel}
+            greeting={greeting}
+            isSidebarOpen={isSidebarOpen}
+            onMenuClick={() => {
+              const mediaQuery = window.matchMedia("(min-width: 768px)");
+              if (mediaQuery.matches) {
+                setIsSidebarOpen(!isSidebarOpen);
+              } else {
+                setIsDrawerOpen(true);
+              }
+            }}
+            userName={user.name}
+          />
+
+          <motion.div
+            className="grid gap-7 lg:grid-cols-[minmax(0,1.42fr)_minmax(330px,0.78fr)]"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+            layout
+          >
           <div className="space-y-6">
             <BalanceHeroCard
               balance={summary.current_balance}
@@ -169,7 +203,8 @@ export default function DashboardPage() {
             <RecentTransactionsCard transactions={recentTransactions} />
           </div>
         </motion.div>
-      </div>
+        </div>
+      </motion.div>
 
       <MobileBottomNav />
       <DashboardDrawer
