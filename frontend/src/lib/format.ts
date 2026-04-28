@@ -8,6 +8,14 @@ export function formatRupiah(value: number): string {
     .replace(/\s/g, " ");
 }
 
+export function formatDate(value: string): string {
+  return new Intl.DateTimeFormat("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(value));
+}
+
 export function formatCompactRupiah(value: number): string {
   const absoluteValue = Math.abs(value);
 
@@ -22,15 +30,11 @@ export function formatCompactRupiah(value: number): string {
 }
 
 export function formatTransactionDate(value: string): string {
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(new Date(value));
+  return formatDate(value);
 }
 
 function formatNumber(value: number): string {
-  return new Intl.NumberFormat("en", {
+  return new Intl.NumberFormat("id-ID", {
     maximumFractionDigits: 1,
   }).format(value);
 }

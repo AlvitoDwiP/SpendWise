@@ -1,4 +1,4 @@
-import { getMe, getToken, removeToken, type User } from "@/lib/api";
+import { getMe, getToken, removeToken, type User } from "./api";
 
 export function isAuthenticated(): boolean {
   return getToken() !== null;

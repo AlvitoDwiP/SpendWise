@@ -2,22 +2,32 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
 
-import { BalanceCard } from "@/components/dashboard/BalanceCard";
-import { BottomNavigation } from "@/components/dashboard/BottomNavigation";
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { RecentTransactions } from "@/components/dashboard/RecentTransactions";
-import { Sidebar } from "@/components/dashboard/Sidebar";
-import { SpendingOverview } from "@/components/dashboard/SpendingOverview";
-import { SummaryCard, ThisMonthSummary } from "@/components/dashboard/SummaryCard";
+import { BalanceHeroCard } from "../../components/dashboard/BalanceHeroCard";
+import { BalanceStatsCards } from "../../components/dashboard/BalanceStatsCards";
+import { DashboardBackground } from "../../components/dashboard/DashboardBackground";
+import { DashboardDrawer } from "../../components/dashboard/DashboardDrawer";
+import { DashboardNavbar } from "../../components/dashboard/DashboardNavbar";
+import {
+  DashboardErrorState,
+  DashboardLoadingState,
+} from "../../components/dashboard/DashboardStates";
+import { MobileBalancePanel } from "../../components/dashboard/MobileBalancePanel";
+import { MobileBottomNav } from "../../components/dashboard/MobileBottomNav";
+import { RecentTransactionsCard } from "../../components/dashboard/RecentTransactionsCard";
+import { SpendingOverviewCard } from "../../components/dashboard/SpendingOverviewCard";
+import { ThisMonthSummaryCard } from "../../components/dashboard/ThisMonthSummaryCard";
 import {
   getDashboardSummary,
+  getMe,
   getRecentTransactions,
+  getToken,
   type DashboardSummary,
   type Transaction,
   type User,
-} from "@/lib/api";
-import { getCurrentUser, isAuthenticated, logout } from "@/lib/auth";
+} from "../../lib/api";
+import { logout } from "../../lib/auth";
 
 type DashboardState = {
   user: User;
@@ -28,14 +38,15 @@ type DashboardState = {
 export default function DashboardPage() {
   const router = useRouter();
   const [dashboard, setDashboard] = useState<DashboardState | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
 
     async function loadDashboard() {
-      if (!isAuthenticated()) {
+      if (!getToken()) {
         router.replace("/login");
         return;
       }
@@ -44,23 +55,14 @@ export default function DashboardPage() {
       setError("");
 
       try {
-        const user = await getCurrentUser();
-        if (!user) {
-          router.replace("/login");
-          return;
-        }
-
-        const [summary, recentTransactions] = await Promise.all([
+        const [user, summary, recentTransactions] = await Promise.all([
+          getMe(),
           getDashboardSummary(),
           getRecentTransactions(),
         ]);
 
         if (isMounted) {
-          setDashboard({
-            user,
-            summary,
-            recentTransactions,
-          });
+          setDashboard({ user, summary, recentTransactions });
         }
       } catch (err) {
         const message =
@@ -89,109 +91,101 @@ export default function DashboardPage() {
     };
   }, [router]);
 
+  const dateLabel = useMemo(() => getCurrentMonthLabel(), []);
   const greeting = useMemo(() => getGreeting(), []);
 
   function handleLogout() {
     logout();
+    setIsDrawerOpen(false);
     router.replace("/login");
   }
 
   if (isLoading) {
-    return <DashboardLoading />;
+    return <DashboardLoadingState />;
   }
 
   if (error || !dashboard) {
     return (
-      <main className="grid min-h-screen place-items-center bg-[#070812] px-6 text-white">
-        <section className="max-w-md rounded-3xl border border-white/10 bg-white/[0.06] p-8 text-center shadow-2xl shadow-black/40">
-          <p className="text-lg font-bold">Dashboard unavailable</p>
-          <p className="mt-3 text-sm text-slate-300">
-            {error || "Unable to load dashboard data."}
-          </p>
-          <button
-            className="mt-6 rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-3 text-sm font-bold text-white"
-            onClick={() => window.location.reload()}
-            type="button"
-          >
-            Try again
-          </button>
-        </section>
-      </main>
+      <DashboardErrorState
+        message={error || "Unable to load dashboard data."}
+        onRetry={() => window.location.reload()}
+      />
     );
   }
 
-  const { user, summary, recentTransactions } = dashboard;
+  const { recentTransactions, summary, user } = dashboard;
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#070812] text-white">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_62%_12%,rgba(124,58,237,0.22),transparent_28%),radial-gradient(circle_at_88%_0%,rgba(236,72,153,0.14),transparent_22%)]" />
-      <div className="relative mx-auto flex w-full max-w-[1440px] gap-8 px-5 py-6 pb-32 md:px-8 lg:px-5 lg:pb-10">
-        <Sidebar onLogout={handleLogout} />
+    <main className="relative min-h-screen overflow-x-hidden bg-[#0f0f10] text-white">
+      <DashboardBackground />
 
-        <div className="min-w-0 flex-1 space-y-7">
-          <DashboardHeader
-            greeting={greeting}
-            userName={firstName(user.name)}
-          />
+      <div className="relative mx-auto w-full max-w-[1240px] px-5 pb-28 pt-5 md:px-8 md:pb-12 md:pt-0">
+        <DashboardNavbar
+          dateLabel={dateLabel}
+          greeting={greeting}
+          onMenuClick={() => setIsDrawerOpen(true)}
+          userName={user.name}
+        />
 
-          <div className="grid gap-7 lg:grid-cols-[1.25fr_0.95fr]">
-            <BalanceCard
+        <motion.div
+          className="grid gap-7 lg:grid-cols-[minmax(0,1.42fr)_minmax(330px,0.78fr)]"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: "easeOut" }}
+        >
+          <div className="space-y-6">
+            <BalanceHeroCard
               balance={summary.current_balance}
               greeting={greeting}
               monthlyIncome={summary.this_month_income}
-              onLogout={handleLogout}
               transactionCount={summary.this_month_transaction_count}
-              userName={firstName(user.name)}
+              userName={user.name}
             />
+            <MobileBalancePanel
+              expense={summary.this_month_expense}
+              income={summary.this_month_income}
+              transactions={recentTransactions}
+            />
+            <div className="hidden md:block">
+              <BalanceStatsCards
+                expense={summary.this_month_expense}
+                income={summary.this_month_income}
+              />
+            </div>
+            <div className="hidden md:block">
+              <SpendingOverviewCard
+                monthlyExpense={summary.this_month_expense}
+                transactions={recentTransactions}
+              />
+            </div>
+          </div>
 
-            <ThisMonthSummary
+          <div className="hidden space-y-6 md:block">
+            <ThisMonthSummaryCard
               expense={summary.this_month_expense}
               income={summary.this_month_income}
               transactionCount={summary.this_month_transaction_count}
             />
+            <RecentTransactionsCard transactions={recentTransactions} />
           </div>
-
-          <div className="grid gap-7 lg:grid-cols-[1.25fr_0.95fr]">
-            <div className="space-y-7">
-              <div className="grid gap-5 sm:grid-cols-2">
-                <SummaryCard
-                  amount={summary.this_month_income}
-                  title="Income"
-                  tone="income"
-                />
-                <SummaryCard
-                  amount={summary.this_month_expense}
-                  title="Expenses"
-                  tone="expense"
-                />
-              </div>
-              <SpendingOverview transactions={recentTransactions} />
-            </div>
-
-            <RecentTransactions transactions={recentTransactions} />
-          </div>
-        </div>
+        </motion.div>
       </div>
 
-      <BottomNavigation />
+      <MobileBottomNav />
+      <DashboardDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        onLogout={handleLogout}
+      />
     </main>
   );
 }
 
-function DashboardLoading() {
-  return (
-    <main className="min-h-screen bg-[#070812] px-5 py-6 text-white md:px-8">
-      <div className="mx-auto flex max-w-[1440px] gap-8">
-        <div className="hidden w-72 shrink-0 rounded-[2rem] bg-white/[0.04] lg:block" />
-        <div className="grid flex-1 gap-7 lg:grid-cols-[1.25fr_0.95fr]">
-          <div className="h-72 animate-pulse rounded-[2rem] bg-white/[0.06]" />
-          <div className="h-72 animate-pulse rounded-[2rem] bg-white/[0.06]" />
-          <div className="h-96 animate-pulse rounded-[2rem] bg-white/[0.06]" />
-          <div className="h-96 animate-pulse rounded-[2rem] bg-white/[0.06]" />
-        </div>
-      </div>
-    </main>
-  );
+function getCurrentMonthLabel(): string {
+  return new Intl.DateTimeFormat("en", {
+    month: "long",
+    year: "numeric",
+  }).format(new Date());
 }
 
 function getGreeting(): string {
@@ -207,14 +201,12 @@ function getGreeting(): string {
   return "Good Evening";
 }
 
-function firstName(name: string): string {
-  return name.trim().split(/\s+/)[0] || "there";
-}
-
 function isAuthError(message: string): boolean {
   const normalizedMessage = message.toLowerCase();
 
   return (
+    normalizedMessage.includes("401") ||
+    normalizedMessage.includes("403") ||
     normalizedMessage.includes("authorization") ||
     normalizedMessage.includes("unauthorized") ||
     normalizedMessage.includes("token")

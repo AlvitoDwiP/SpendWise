@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
-import { register } from "@/lib/api";
+import { register } from "../../lib/api";
 
 export default function RegisterPage() {
   const router = useRouter();
