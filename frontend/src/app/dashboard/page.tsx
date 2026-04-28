@@ -206,7 +206,7 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
-      <MobileBottomNav />
+      <MobileBottomNav onLogout={handleLogout} />
       <DashboardDrawer
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
