@@ -1,9 +1,14 @@
 package handlers
 
 import (
+	"context"
 	"errors"
+	"io"
+	"log"
+	"mime/multipart"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"SpendWise/dto"
@@ -15,13 +20,15 @@ import (
 )
 
 type TransactionHandler struct {
-	DB *gorm.DB
+	DB                 *gorm.DB
+	ReceiptScanService *services.ReceiptScanService
 }
 
 const (
 	defaultTransactionLimit  = 20
 	maxTransactionLimit      = 100
 	defaultTransactionOffset = 0
+	maxReceiptFileSizeBytes  = 5 << 20
 )
 
 type createTransactionRequest struct {
@@ -34,7 +41,10 @@ type createTransactionRequest struct {
 }
 
 func NewTransactionHandler(db *gorm.DB) *TransactionHandler {
-	return &TransactionHandler{DB: db}
+	return &TransactionHandler{
+		DB:                 db,
+		ReceiptScanService: services.NewReceiptScanService(db, services.NewMockOCRProvider()),
+	}
 }
 
 func (h *TransactionHandler) GetTransactions(c *gin.Context) {
@@ -222,6 +232,72 @@ func (h *TransactionHandler) GetRecentTransactions(c *gin.Context) {
 	}
 
 	utils.SuccessResponse(c, http.StatusOK, "recent transactions loaded", dto.ToTransactionResponses(transactions))
+}
+
+func (h *TransactionHandler) ScanReceipt(c *gin.Context) {
+	userID, ok := utils.GetUserIDFromContext(c)
+	if !ok {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxReceiptFileSizeBytes)
+	fileHeader, err := c.FormFile("receipt")
+	if err != nil {
+		message := strings.ToLower(err.Error())
+		if strings.Contains(message, "request body too large") {
+			utils.ErrorResponse(c, http.StatusBadRequest, "file is too large (max 5MB)")
+			return
+		}
+		utils.ErrorResponse(c, http.StatusBadRequest, "receipt file is required")
+		return
+	}
+
+	contentType, err := detectContentType(fileHeader)
+	if err != nil {
+		log.Printf("scan receipt detect content type failed: %v", err)
+		utils.ErrorResponse(c, http.StatusBadRequest, "failed to read uploaded file")
+		return
+	}
+
+	if !isAllowedImageContentType(contentType) {
+		utils.ErrorResponse(c, http.StatusBadRequest, "unsupported file type, only jpeg, png, and webp are allowed")
+		return
+	}
+
+	suggestion, err := h.ReceiptScanService.ScanReceipt(context.Background(), userID, fileHeader)
+	if err != nil {
+		log.Printf("scan receipt failed for user %d: %v", userID, err)
+		utils.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "receipt scan suggestion generated", suggestion)
+}
+
+func detectContentType(header *multipart.FileHeader) (string, error) {
+	file, err := header.Open()
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	buffer := make([]byte, 512)
+	n, err := file.Read(buffer)
+	if err != nil && !errors.Is(err, io.EOF) {
+		return "", err
+	}
+
+	return http.DetectContentType(buffer[:n]), nil
+}
+
+func isAllowedImageContentType(contentType string) bool {
+	switch contentType {
+	case "image/jpeg", "image/png", "image/webp":
+		return true
+	default:
+		return false
+	}
 }
 
 func parseTransactionID(c *gin.Context) (uint, error) {
