@@ -38,14 +38,16 @@ func (r *execTesseractRunner) Run(ctx context.Context, imagePath string) (string
 }
 
 type TesseractOCRProvider struct {
-	Runner  TesseractCommandRunner
-	Timeout time.Duration
+	Runner    TesseractCommandRunner
+	Converter ImageConverter
+	Timeout   time.Duration
 }
 
 func NewTesseractOCRProvider() *TesseractOCRProvider {
 	return &TesseractOCRProvider{
-		Runner:  &execTesseractRunner{},
-		Timeout: 15 * time.Second,
+		Runner:    &execTesseractRunner{},
+		Converter: NewImageMagickConverter(),
+		Timeout:   15 * time.Second,
 	}
 }
 
@@ -53,16 +55,16 @@ func (p *TesseractOCRProvider) Name() string {
 	return "tesseract"
 }
 
-func (p *TesseractOCRProvider) ExtractText(ctx context.Context, file multipart.File, _ *multipart.FileHeader) (string, error) {
-	tempFile, err := os.CreateTemp("", "spendwise-receipt-*.img")
+func (p *TesseractOCRProvider) ExtractText(ctx context.Context, file multipart.File, header *multipart.FileHeader) (string, error) {
+	tempFile, err := os.CreateTemp("", "spendwise-receipt-upload-*")
 	if err != nil {
 		return "", errors.New("failed to create temporary OCR file")
 	}
-	tempPath := tempFile.Name()
+	uploadPath := tempFile.Name()
 
 	defer func() {
 		_ = tempFile.Close()
-		_ = os.Remove(tempPath)
+		_ = os.Remove(uploadPath)
 	}()
 
 	if _, err := io.Copy(tempFile, file); err != nil {
@@ -81,7 +83,27 @@ func (p *TesseractOCRProvider) ExtractText(ctx context.Context, file multipart.F
 		runner = &execTesseractRunner{}
 	}
 
-	text, err := runner.Run(runCtx, tempPath)
+	converter := p.Converter
+	if converter == nil {
+		converter = NewImageMagickConverter()
+	}
+	declaredContentType := ""
+	filename := ""
+	if header != nil {
+		declaredContentType = header.Header.Get("Content-Type")
+		filename = header.Filename
+	}
+	inputContentType := inferContentTypeFromHeaderOrExt(declaredContentType, filename)
+	ocrPath, cleanupConverted, err := converter.ConvertToOCRCompatible(runCtx, uploadPath, inputContentType)
+	if err != nil {
+		if errors.Is(err, ErrHEICConversionRequiresImageMagick) {
+			return "", ErrHEICConversionRequiresImageMagick
+		}
+		return "", err
+	}
+	defer cleanupConverted()
+
+	text, err := runner.Run(runCtx, ocrPath)
 	if err != nil {
 		if errors.Is(err, ErrOCREngineNotConfigured) {
 			return "", ErrOCREngineNotConfigured

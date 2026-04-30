@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"mime/multipart"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"SpendWise/services"
 	"SpendWise/utils"
 
 	"github.com/gin-gonic/gin"
@@ -38,11 +40,15 @@ func TestScanReceiptMissingFile(t *testing.T) {
 	}
 }
 
-func TestScanReceiptHEICAcceptedButConversionNotConfigured(t *testing.T) {
+func TestScanReceiptHEICConversionActionableError(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	router := gin.New()
-	handler := NewTransactionHandler(nil)
+	provider := services.NewTesseractOCRProvider()
+	provider.Converter = &services.ImageMagickConverter{
+		Runner: &stubFailingImageMagickRunner{},
+	}
+	handler := NewTransactionHandlerWithProvider(nil, provider)
 	router.POST("/transactions/scan-receipt", withTestUser(), handler.ScanReceipt)
 
 	body := &bytes.Buffer{}
@@ -79,7 +85,7 @@ func TestScanReceiptHEICAcceptedButConversionNotConfigured(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &payload); err != nil {
 		t.Fatalf("failed to parse response: %v", err)
 	}
-	if !strings.Contains(payload.Message, "HEIC upload accepted but conversion is not configured") {
+	if !strings.Contains(payload.Message, "HEIC conversion requires ImageMagick") {
 		t.Fatalf("unexpected message: %s", payload.Message)
 	}
 }
@@ -120,4 +126,10 @@ func withTestUser() gin.HandlerFunc {
 		c.Set(utils.UserIDContextKey, uint(1))
 		c.Next()
 	}
+}
+
+type stubFailingImageMagickRunner struct{}
+
+func (s *stubFailingImageMagickRunner) Run(_ context.Context, _ string, _ string) error {
+	return services.ErrHEICConversionRequiresImageMagick
 }

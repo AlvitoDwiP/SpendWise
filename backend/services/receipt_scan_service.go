@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"mime/multipart"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -16,8 +15,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
-
-var ErrHEICConversionNotConfigured = errors.New("HEIC upload accepted but conversion is not configured")
 
 type OCRProvider interface {
 	ExtractText(ctx context.Context, file multipart.File, header *multipart.FileHeader) (string, error)
@@ -68,9 +65,6 @@ func (s *ReceiptScanService) ScanReceipt(ctx context.Context, userID uint, heade
 	if s.OCRProvider == nil {
 		return nil, errors.New("ocr provider is not configured")
 	}
-	if isHEICUpload(header) {
-		return nil, ErrHEICConversionNotConfigured
-	}
 
 	file, err := header.Open()
 	if err != nil {
@@ -82,6 +76,12 @@ func (s *ReceiptScanService) ScanReceipt(ctx context.Context, userID uint, heade
 	if err != nil {
 		if errors.Is(err, ErrOCREngineNotConfigured) {
 			return nil, ErrOCREngineNotConfigured
+		}
+		if errors.Is(err, ErrHEICConversionRequiresImageMagick) {
+			return nil, err
+		}
+		if errors.Is(err, ErrHEICConversionFailed) {
+			return nil, err
 		}
 		return nil, errors.New("failed to scan receipt")
 	}
@@ -179,11 +179,6 @@ func truncateForDebug(rawText string, maxLen int) string {
 	}
 	log.Printf("receipt raw text truncated from %d to %d chars", len(rawText), maxLen)
 	return rawText[:maxLen]
-}
-
-func isHEICUpload(header *multipart.FileHeader) bool {
-	ext := strings.ToLower(filepath.Ext(strings.TrimSpace(header.Filename)))
-	return ext == ".heic" || ext == ".heif"
 }
 
 func getOCRProviderName(provider OCRProvider) string {

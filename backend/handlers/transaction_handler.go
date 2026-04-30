@@ -272,7 +272,11 @@ func (h *TransactionHandler) ScanReceipt(c *gin.Context) {
 
 	suggestion, err := h.ReceiptScanService.ScanReceipt(context.Background(), userID, fileHeader)
 	if err != nil {
-		if errors.Is(err, services.ErrHEICConversionNotConfigured) {
+		if errors.Is(err, services.ErrHEICConversionRequiresImageMagick) {
+			utils.ErrorResponse(c, http.StatusBadRequest, err.Error())
+			return
+		}
+		if errors.Is(err, services.ErrHEICConversionFailed) {
 			utils.ErrorResponse(c, http.StatusBadRequest, err.Error())
 			return
 		}
