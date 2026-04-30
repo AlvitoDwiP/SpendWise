@@ -7,8 +7,10 @@ import { Receipt, X } from "lucide-react";
 import {
   createTransaction,
   getCategories,
+  scanReceipt as scanReceiptApi,
   type Category,
   type CategoryType,
+  type ReceiptScanSuggestion,
   type Transaction,
   type TransactionPayload,
 } from "../../lib/api";
@@ -17,7 +19,7 @@ import {
   type TransactionField,
   type TransactionFormValues,
 } from "./TransactionForm";
-import { isValidDate, parseTransactionDate, toRFC3339 } from "./dateUtils";
+import { isValidDate, toRFC3339 } from "./dateUtils";
 import { ReceiptUploadStep } from "./ReceiptUploadStep";
 
 type AddTransactionModalProps = {
@@ -33,8 +35,7 @@ type ScanSuggestion = {
   categoryId: string;
   date: Date;
   note: string;
-  confidence?: number;
-  warning?: string;
+  confidence: number | null;
 };
 
 const scannedHighlightFields: TransactionField[] = [
@@ -55,6 +56,7 @@ export function AddTransactionModal({ onClose, onCreated }: AddTransactionModalP
   const [scanFile, setScanFile] = useState<File | null>(null);
   const [scanPreviewUrl, setScanPreviewUrl] = useState("");
   const [scanSuggestionNotice, setScanSuggestionNotice] = useState("");
+  const [scanConfidence, setScanConfidence] = useState<number | null>(null);
   const [formValues, setFormValues] = useState<TransactionFormValues>(() =>
     defaultFormValues(),
   );
@@ -107,6 +109,7 @@ export function AddTransactionModal({ onClose, onCreated }: AddTransactionModalP
   function handleFileChange(file: File | null) {
     setError("");
     setScanSuggestionNotice("");
+    setScanConfidence(null);
     setScanFile(file);
 
     if (scanPreviewUrl) {
@@ -135,20 +138,34 @@ export function AddTransactionModal({ onClose, onCreated }: AddTransactionModalP
         ...current,
         amount: suggestion.amount,
         categoryId: suggestion.categoryId,
-        date: parseTransactionDate(suggestion.date) ?? new Date(),
+        date: suggestion.date,
         note: suggestion.note,
         type: suggestion.type,
       }));
       setMode("manual");
+      setScanConfidence(suggestion.confidence);
       setScanSuggestionNotice(
-        suggestion.warning ??
-          "Receipt uploaded. OCR backend belum tersedia. Isi nominal secara manual sebelum menyimpan.",
+        "Hasil scan hanya suggestion. Cek kembali sebelum menyimpan.",
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to prepare suggestion.");
+      setError(err instanceof Error ? err.message : "Gagal memindai receipt.");
     } finally {
       setIsScanning(false);
     }
+  }
+
+  function handleCloseModal() {
+    setError("");
+    setScanSuggestionNotice("");
+    setScanConfidence(null);
+    setScanFile(null);
+    if (scanPreviewUrl) {
+      URL.revokeObjectURL(scanPreviewUrl);
+      setScanPreviewUrl("");
+    }
+    setFormValues(defaultFormValues());
+    setMode("manual");
+    onClose();
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -211,11 +228,11 @@ export function AddTransactionModal({ onClose, onCreated }: AddTransactionModalP
         className="absolute inset-0 bg-black/55 backdrop-blur-sm"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        onClick={() => {
-          if (!isSubmitting && !isScanning) {
-            onClose();
-          }
-        }}
+            onClick={() => {
+              if (!isSubmitting && !isScanning) {
+                handleCloseModal();
+              }
+            }}
         type="button"
       />
 
@@ -238,7 +255,7 @@ export function AddTransactionModal({ onClose, onCreated }: AddTransactionModalP
             aria-label="Close modal"
             className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/10 bg-white/10 text-white/70 transition hover:bg-white/15 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
             disabled={isSubmitting || isScanning}
-            onClick={onClose}
+            onClick={handleCloseModal}
             type="button"
           >
             <X className="h-5 w-5" />
@@ -280,9 +297,16 @@ export function AddTransactionModal({ onClose, onCreated }: AddTransactionModalP
         ) : null}
 
         {scanSuggestionNotice ? (
-          <p className="mt-4 rounded-xl border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
-            {scanSuggestionNotice}
-          </p>
+          <div className="mt-4 space-y-2">
+            {scanConfidence !== null ? (
+              <div className="inline-flex rounded-full border border-sky-300/35 bg-sky-500/10 px-2.5 py-1 text-xs font-medium text-sky-100">
+                {toConfidenceLabel(scanConfidence)} confidence
+              </div>
+            ) : null}
+            <p className="rounded-xl border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
+              {scanSuggestionNotice}
+            </p>
+          </div>
         ) : null}
 
         {error ? (
@@ -326,7 +350,7 @@ export function AddTransactionModal({ onClose, onCreated }: AddTransactionModalP
             <button
               className="inline-flex items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white/80 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
               disabled={isSubmitting || isScanning}
-              onClick={onClose}
+              onClick={handleCloseModal}
               type="button"
             >
               Cancel
@@ -399,24 +423,55 @@ async function scanReceipt(
   file: File,
   expenseCategories: Category[],
 ): Promise<ScanSuggestion> {
-  await new Promise((resolve) => setTimeout(resolve, 800));
+  const response = await scanReceiptApi(file);
+  const type = response.type === "income" || response.type === "expense" ? response.type : "expense";
+  const fallbackCategory = pickBestExpenseCategory(expenseCategories);
 
-  if (file.name.toLowerCase().includes("fail")) {
-    throw new Error("Receipt upload failed. Please try another image.");
+  let date = new Date();
+  if (response.transaction_date) {
+    const parsed = new Date(response.transaction_date);
+    if (!Number.isNaN(parsed.getTime())) {
+      date = parsed;
+    }
   }
 
-  const preferredCategory = pickBestExpenseCategory(expenseCategories);
-
-  // TODO: Replace with OCR backend call when endpoint is available.
+  const note = response.note?.trim() || response.merchant?.trim() || "";
+  const suggestedCategoryId = resolveSuggestedCategoryId(response, expenseCategories);
   return {
-    amount: null,
-    categoryId: preferredCategory ? String(preferredCategory.id) : "",
-    date: parseTransactionDate(new Date().toISOString().slice(0, 10)) ?? new Date(),
-    note: "",
-    type: "expense",
-    confidence: 0,
-    warning: preferredCategory
-      ? "Receipt uploaded. OCR backend belum tersedia. Isi nominal secara manual sebelum menyimpan."
-      : "Receipt uploaded. OCR backend belum tersedia dan category expense belum ada. Pilih category secara manual.",
+    amount: Number.isFinite(response.amount) ? Number(response.amount) : null,
+    categoryId: suggestedCategoryId ?? (fallbackCategory ? String(fallbackCategory.id) : ""),
+    date,
+    note,
+    type,
+    confidence:
+      typeof response.confidence === "number" && Number.isFinite(response.confidence)
+        ? response.confidence
+        : null,
   };
+}
+
+function resolveSuggestedCategoryId(
+  response: ReceiptScanSuggestion,
+  expenseCategories: Category[],
+): string | null {
+  const suggestedId = response.category_suggestion?.id;
+  if (typeof suggestedId === "number") {
+    const exists = expenseCategories.some((category) => category.id === suggestedId);
+    if (exists) {
+      return String(suggestedId);
+    }
+  }
+
+  const fallbackCategory = pickBestExpenseCategory(expenseCategories);
+  return fallbackCategory ? String(fallbackCategory.id) : null;
+}
+
+function toConfidenceLabel(confidence: number): "Low" | "Medium" | "High" {
+  if (confidence < 0.4) {
+    return "Low";
+  }
+  if (confidence <= 0.7) {
+    return "Medium";
+  }
+  return "High";
 }

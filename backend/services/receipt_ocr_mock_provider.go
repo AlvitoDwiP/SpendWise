@@ -13,6 +13,10 @@ func NewMockOCRProvider() *MockOCRProvider {
 	return &MockOCRProvider{}
 }
 
+func (m *MockOCRProvider) Name() string {
+	return "mock"
+}
+
 func (m *MockOCRProvider) ExtractText(_ context.Context, _ multipart.File, header *multipart.FileHeader) (string, error) {
 	fileName := strings.TrimSpace(header.Filename)
 	if fileName == "" {

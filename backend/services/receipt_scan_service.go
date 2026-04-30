@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"mime/multipart"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -16,8 +17,14 @@ import (
 	"gorm.io/gorm"
 )
 
+var ErrHEICConversionNotConfigured = errors.New("HEIC upload accepted but conversion is not configured")
+
 type OCRProvider interface {
 	ExtractText(ctx context.Context, file multipart.File, header *multipart.FileHeader) (string, error)
+}
+
+type namedOCRProvider interface {
+	Name() string
 }
 
 type ReceiptScanService struct {
@@ -61,6 +68,9 @@ func (s *ReceiptScanService) ScanReceipt(ctx context.Context, userID uint, heade
 	if s.OCRProvider == nil {
 		return nil, errors.New("ocr provider is not configured")
 	}
+	if isHEICUpload(header) {
+		return nil, ErrHEICConversionNotConfigured
+	}
 
 	file, err := header.Open()
 	if err != nil {
@@ -70,43 +80,61 @@ func (s *ReceiptScanService) ScanReceipt(ctx context.Context, userID uint, heade
 
 	rawText, err := s.OCRProvider.ExtractText(ctx, file, header)
 	if err != nil {
+		if errors.Is(err, ErrOCREngineNotConfigured) {
+			return nil, ErrOCREngineNotConfigured
+		}
 		return nil, errors.New("failed to scan receipt")
 	}
 
 	normalizedText := strings.TrimSpace(rawText)
 	if normalizedText == "" {
-		normalizedText = "receipt uploaded"
+		return nil, errors.New("OCR text is empty, try a clearer image")
+	}
+	providerName := getOCRProviderName(s.OCRProvider)
+	if gin.Mode() != gin.ReleaseMode {
+		log.Printf("OCR RAW TEXT (%s): %s", providerName, truncateForDebug(normalizedText, 500))
 	}
 
 	amount, amountFound := ParseAmountFromReceiptText(normalizedText)
 	transactionDate, dateFound := ParseDateFromReceiptText(normalizedText, s.NowFunc())
 	merchant := ParseMerchantFromReceiptText(normalizedText)
+	transactionType := detectTransactionType(normalizedText)
 
 	categories, err := repositories.GetCategoriesByUserID(s.DB, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	category, categoryFound := SuggestCategoryForReceipt(categories, normalizedText)
-	categorySuggestion := &CategorySuggestion{
-		ID:         category.ID,
-		Name:       category.Name,
-		Confidence: 0.45,
-	}
-	if categoryFound {
-		categorySuggestion.Confidence = 0.75
+	category, categoryFound := SuggestCategoryForReceipt(categories, normalizedText, transactionType)
+	var categorySuggestion *CategorySuggestion
+	if category.ID != 0 {
+		categoryConfidence := 0.45
+		if categoryFound {
+			categoryConfidence = 0.78
+		}
+		categorySuggestion = &CategorySuggestion{
+			ID:         category.ID,
+			Name:       category.Name,
+			Confidence: categoryConfidence,
+		}
 	}
 
-	confidence := calculateReceiptConfidence(amountFound, dateFound, categoryFound)
+	confidence := calculateReceiptConfidence(amountFound, dateFound, categoryFound, transactionType, categorySuggestion != nil)
 
 	suggestion := &ReceiptScanSuggestion{
-		Type:               models.TypeExpense,
+		Type:               transactionType,
 		Amount:             amount,
 		TransactionDate:    transactionDate.UTC().Format(time.RFC3339),
 		Merchant:           merchant,
 		Note:               fmt.Sprintf("%s - scanned receipt", merchant),
 		CategorySuggestion: categorySuggestion,
 		Confidence:         confidence,
+	}
+	if providerName == "mock" {
+		suggestion.Note = suggestion.Note + " [mock OCR provider active]"
+		if suggestion.Confidence > 0.35 {
+			suggestion.Confidence = 0.35
+		}
 	}
 
 	if gin.Mode() != gin.ReleaseMode {
@@ -116,19 +144,31 @@ func (s *ReceiptScanService) ScanReceipt(ctx context.Context, userID uint, heade
 	return suggestion, nil
 }
 
-func calculateReceiptConfidence(amountFound bool, dateFound bool, categoryFound bool) float64 {
-	score := 0.2
+func calculateReceiptConfidence(amountFound bool, dateFound bool, categoryFound bool, transactionType string, hasCategory bool) float64 {
+	score := 0.15
 	if amountFound {
-		score += 0.4
+		score += 0.35
 	}
 	if dateFound {
+		score += 0.15
+	}
+	if transactionType == models.TypeIncome {
 		score += 0.2
+	} else {
+		score += 0.1
 	}
 	if categoryFound {
-		score += 0.2
+		score += 0.15
+	} else if hasCategory {
+		score -= 0.05
+	} else {
+		score -= 0.1
 	}
-	if score > 1 {
-		return 1
+	if score < 0.1 {
+		return 0.1
+	}
+	if score > 0.98 {
+		return 0.98
 	}
 	return score
 }
@@ -139,4 +179,21 @@ func truncateForDebug(rawText string, maxLen int) string {
 	}
 	log.Printf("receipt raw text truncated from %d to %d chars", len(rawText), maxLen)
 	return rawText[:maxLen]
+}
+
+func isHEICUpload(header *multipart.FileHeader) bool {
+	ext := strings.ToLower(filepath.Ext(strings.TrimSpace(header.Filename)))
+	return ext == ".heic" || ext == ".heif"
+}
+
+func getOCRProviderName(provider OCRProvider) string {
+	named, ok := provider.(namedOCRProvider)
+	if !ok {
+		return "unknown"
+	}
+	name := strings.ToLower(strings.TrimSpace(named.Name()))
+	if name == "" {
+		return "unknown"
+	}
+	return name
 }

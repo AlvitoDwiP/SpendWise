@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"bytes"
+	"encoding/json"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"SpendWise/utils"
@@ -33,6 +35,52 @@ func TestScanReceiptMissingFile(t *testing.T) {
 
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("expected status %d, got %d", http.StatusBadRequest, rec.Code)
+	}
+}
+
+func TestScanReceiptHEICAcceptedButConversionNotConfigured(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	router := gin.New()
+	handler := NewTransactionHandler(nil)
+	router.POST("/transactions/scan-receipt", withTestUser(), handler.ScanReceipt)
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile("receipt", "income.heic")
+	if err != nil {
+		t.Fatalf("failed to create form file: %v", err)
+	}
+	heicHeader := []byte{
+		0x00, 0x00, 0x00, 0x18,
+		'f', 't', 'y', 'p', 'h', 'e', 'i', 'c',
+		0x00, 0x00, 0x00, 0x00,
+	}
+	if _, err := part.Write(heicHeader); err != nil {
+		t.Fatalf("failed to write form file: %v", err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatalf("failed to close writer: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/transactions/scan-receipt", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected status %d, got %d", http.StatusBadRequest, rec.Code)
+	}
+
+	var payload struct {
+		Message string `json:"message"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &payload); err != nil {
+		t.Fatalf("failed to parse response: %v", err)
+	}
+	if !strings.Contains(payload.Message, "HEIC upload accepted but conversion is not configured") {
+		t.Fatalf("unexpected message: %s", payload.Message)
 	}
 }
 

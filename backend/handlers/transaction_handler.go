@@ -7,6 +7,7 @@ import (
 	"log"
 	"mime/multipart"
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -41,9 +42,13 @@ type createTransactionRequest struct {
 }
 
 func NewTransactionHandler(db *gorm.DB) *TransactionHandler {
+	return NewTransactionHandlerWithProvider(db, services.NewMockOCRProvider())
+}
+
+func NewTransactionHandlerWithProvider(db *gorm.DB, provider services.OCRProvider) *TransactionHandler {
 	return &TransactionHandler{
 		DB:                 db,
-		ReceiptScanService: services.NewReceiptScanService(db, services.NewMockOCRProvider()),
+		ReceiptScanService: services.NewReceiptScanService(db, provider),
 	}
 }
 
@@ -261,12 +266,16 @@ func (h *TransactionHandler) ScanReceipt(c *gin.Context) {
 	}
 
 	if !isAllowedImageContentType(contentType) {
-		utils.ErrorResponse(c, http.StatusBadRequest, "unsupported file type, only jpeg, png, and webp are allowed")
+		utils.ErrorResponse(c, http.StatusBadRequest, "unsupported file type, only jpeg, png, webp, and heic/heif are allowed")
 		return
 	}
 
 	suggestion, err := h.ReceiptScanService.ScanReceipt(context.Background(), userID, fileHeader)
 	if err != nil {
+		if errors.Is(err, services.ErrHEICConversionNotConfigured) {
+			utils.ErrorResponse(c, http.StatusBadRequest, err.Error())
+			return
+		}
 		log.Printf("scan receipt failed for user %d: %v", userID, err)
 		utils.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -288,12 +297,50 @@ func detectContentType(header *multipart.FileHeader) (string, error) {
 		return "", err
 	}
 
-	return http.DetectContentType(buffer[:n]), nil
+	sniffed := http.DetectContentType(buffer[:n])
+	if sniffed != "application/octet-stream" {
+		return sniffed, nil
+	}
+
+	if heicBrandDetected(buffer[:n]) {
+		return "image/heic", nil
+	}
+
+	// Some clients send explicit multipart content type for HEIC/HEIF while sniffing remains octet-stream.
+	declared := strings.ToLower(strings.TrimSpace(header.Header.Get("Content-Type")))
+	ext := strings.ToLower(strings.TrimSpace(filepath.Ext(header.Filename)))
+	if isHEICDeclaredType(declared) && (ext == ".heic" || ext == ".heif") {
+		return declared, nil
+	}
+
+	return sniffed, nil
 }
 
 func isAllowedImageContentType(contentType string) bool {
 	switch contentType {
-	case "image/jpeg", "image/png", "image/webp":
+	case "image/jpeg", "image/png", "image/webp", "image/heic", "image/heif", "image/heic-sequence", "image/heif-sequence":
+		return true
+	default:
+		return false
+	}
+}
+
+func heicBrandDetected(headerBytes []byte) bool {
+	if len(headerBytes) < 12 {
+		return false
+	}
+	signature := strings.ToLower(string(headerBytes))
+	return strings.Contains(signature, "ftypheic") ||
+		strings.Contains(signature, "ftypheif") ||
+		strings.Contains(signature, "ftypheix") ||
+		strings.Contains(signature, "ftyphevc") ||
+		strings.Contains(signature, "ftypmif1") ||
+		strings.Contains(signature, "ftypmsf1")
+}
+
+func isHEICDeclaredType(contentType string) bool {
+	switch contentType {
+	case "image/heic", "image/heif", "image/heic-sequence", "image/heif-sequence":
 		return true
 	default:
 		return false

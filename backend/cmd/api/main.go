@@ -8,6 +8,7 @@ import (
 	"SpendWise/middlewares"
 	"SpendWise/models"
 	"SpendWise/routes"
+	"SpendWise/services"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -60,7 +61,12 @@ func main() {
 	protected.Use(middlewares.AuthMiddleware())
 	routes.RegisterUserRoutes(protected, db)
 	routes.RegisterCategoryRoutes(protected, db)
-	routes.RegisterTransactionRoutes(protected, db)
+	ocrProvider, ocrProviderName, err := services.NewOCRProviderFromName(config.GetEnv("OCR_PROVIDER", "mock"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("OCR provider: %s", ocrProviderName)
+	routes.RegisterTransactionRoutes(protected, db, ocrProvider)
 	routes.RegisterDashboardRoutes(protected, db)
 	routes.RegisterReportRoutes(protected, db)
 

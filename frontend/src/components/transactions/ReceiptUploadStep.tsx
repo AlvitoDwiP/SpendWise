@@ -24,11 +24,6 @@ export function ReceiptUploadStep({
   return (
     <div className="space-y-4">
       {imageUrl ? <ReceiptPreview imageUrl={imageUrl} onRemove={onRemoveImage} /> : null}
-      {imageUrl ? (
-        <div className="rounded-xl border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
-          Receipt uploaded. OCR backend belum tersedia. Isi nominal secara manual sebelum menyimpan.
-        </div>
-      ) : null}
 
       <div className="grid gap-2 sm:grid-cols-2">
         <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-semibold text-white/85 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60">
@@ -63,7 +58,7 @@ export function ReceiptUploadStep({
         onClick={onScan}
         type="button"
       >
-        {isScanning ? "Preparing suggestion..." : "Generate Suggestion"}
+        {isScanning ? "Scanning receipt..." : "Scan Receipt"}
       </button>
     </div>
   );

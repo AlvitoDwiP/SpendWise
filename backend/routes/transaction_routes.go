@@ -2,13 +2,14 @@ package routes
 
 import (
 	"SpendWise/handlers"
+	"SpendWise/services"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
-func RegisterTransactionRoutes(router *gin.RouterGroup, db *gorm.DB) {
-	transactionHandler := handlers.NewTransactionHandler(db)
+func RegisterTransactionRoutes(router *gin.RouterGroup, db *gorm.DB, provider services.OCRProvider) {
+	transactionHandler := handlers.NewTransactionHandlerWithProvider(db, provider)
 
 	router.GET("/transactions/recent", transactionHandler.GetRecentTransactions)
 	router.GET("/transactions", transactionHandler.GetTransactions)
