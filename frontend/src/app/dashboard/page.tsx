@@ -3,13 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { CalendarDays, ChevronDown } from "lucide-react";
+import { CalendarDays, ChevronDown, Menu, Plus } from "lucide-react";
 
 import { BalanceHeroCard } from "../../components/dashboard/BalanceHeroCard";
 import { BalanceStatsCards } from "../../components/dashboard/BalanceStatsCards";
 import { DashboardBackground } from "../../components/dashboard/DashboardBackground";
 import { DashboardDrawer } from "../../components/dashboard/DashboardDrawer";
-import { DashboardNavbar } from "../../components/dashboard/DashboardNavbar";
 import { DashboardSidebarCard } from "../../components/dashboard/DashboardSidebarCard";
 import { AnimatePresence } from "framer-motion";
 import {
@@ -330,25 +329,8 @@ export default function DashboardPage() {
           )}
         </AnimatePresence>
 
-        <div className="relative mx-auto w-full max-w-full flex-1 px-4 pb-[calc(env(safe-area-inset-bottom)+6.6rem)] pt-2.5 md:px-8 md:pb-12 md:pt-0">
-          <DashboardNavbar
-            greeting={greeting}
-            isSidebarOpen={isSidebarOpen}
-            monthOptions={monthOptions.map((item) => ({ key: item.key, label: item.label }))}
-            onAddTransaction={() => setIsAddTransactionOpen(true)}
-            onMenuClick={() => {
-              const mediaQuery = window.matchMedia("(min-width: 768px)");
-              if (mediaQuery.matches) {
-                setIsSidebarOpen(!isSidebarOpen);
-              } else {
-                setIsDrawerOpen(true);
-              }
-            }}
-            onMonthChange={setSelectedMonthKey}
-            selectedMonthKey={effectiveSelectedMonthKey}
-            userName={user.name}
-          />
-          <div className="mb-4 flex items-center justify-end md:hidden">
+        <div className="relative mx-auto w-full max-w-full flex-1 px-4 pb-[calc(env(safe-area-inset-bottom)+6.6rem)] pt-1 md:px-8 md:pb-12 md:pt-0">
+          <div className="mb-2 flex items-center justify-end md:hidden">
             <div className="relative inline-flex w-fit items-center">
               <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/60" />
               <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/50" />
@@ -369,16 +351,51 @@ export default function DashboardPage() {
           </div>
 
           <motion.div
-            className="grid min-w-0 gap-4 md:gap-7 lg:grid-cols-[minmax(0,1.42fr)_minmax(330px,0.78fr)]"
+            className="mt-4 grid min-w-0 gap-4 md:mt-6 md:gap-7 lg:grid-cols-[minmax(0,1.42fr)_minmax(330px,0.78fr)]"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, ease: "easeOut" }}
             layout
           >
             <div className="min-w-0 space-y-4 md:space-y-6">
+              <div className="hidden md:flex md:items-start md:gap-3">
+                <motion.button
+                  aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
+                  className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-white/10 bg-white/5 text-white shadow-xl shadow-black/20 backdrop-blur-md transition hover:bg-white/10"
+                  onClick={() => setIsSidebarOpen((value) => !value)}
+                  type="button"
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.94 }}
+                >
+                  <Menu className="h-5 w-5" />
+                </motion.button>
+                <div className="min-w-0">
+                  <div className="mb-2 flex items-center gap-3">
+                    <div className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full border border-white/10 bg-white/10 text-xs font-semibold text-white">
+                      {user.profile_photo_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          alt={`${user.name} profile`}
+                          className="h-full w-full object-cover"
+                          src={user.profile_photo_url}
+                        />
+                      ) : (
+                        getInitial(user.name)
+                      )}
+                    </div>
+                    <h1 className="truncate text-2xl font-semibold text-white">
+                      {greeting}, {user.name}
+                    </h1>
+                  </div>
+                  <p className="max-w-xl text-sm leading-6 text-white/60">
+                    Take full control of your financial future starting today.
+                  </p>
+                </div>
+              </div>
               <BalanceHeroCard
                 balance={summary.current_balance}
                 greeting={greeting}
+                profilePhotoUrl={user.profile_photo_url}
                 userName={user.name}
               />
               <BalanceStatsCards
@@ -397,6 +414,10 @@ export default function DashboardPage() {
                   transactions={recentTransactions}
                 />
               </div>
+              <SpendingOverviewCard
+                activeMonthKey={selectedMonth.key}
+                transactions={dashboard.allTransactions}
+              />
               <div className="md:hidden">
                 <ThisMonthSummaryCard
                   activeMonthExpense={kpi.expense}
@@ -406,15 +427,41 @@ export default function DashboardPage() {
                   totalExpenseLast7Days={rollingExpense.last7Days}
                 />
               </div>
-              <SpendingOverviewCard
-                activeMonthKey={selectedMonth.key}
-                transactions={dashboard.allTransactions}
-              />
             </div>
 
-            <div className="hidden min-w-0 space-y-6 md:block">
+            <div className="hidden min-w-0 space-y-5 md:block">
+              <section className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-xl shadow-black/20 backdrop-blur-xl">
+                <div className="flex items-center gap-3">
+                  <div className="relative min-w-0 flex-1">
+                    <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/60" />
+                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/50" />
+                    <select
+                      className="h-[42px] w-full appearance-none rounded-xl border border-white/10 bg-white/5 pl-9 pr-9 text-sm font-medium text-white/80 outline-none backdrop-blur-md transition hover:bg-white/10 focus:border-purple-400/40"
+                      onChange={(event) => setSelectedMonthKey(event.target.value)}
+                      value={effectiveSelectedMonthKey}
+                    >
+                      {monthOptions.map((option) => (
+                        <option className="bg-[#1c1c1e] text-white" key={option.key} value={option.key}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <motion.button
+                    className="flex h-[42px] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 px-4 text-sm font-semibold text-white shadow-lg shadow-purple-500/20"
+                    onClick={() => setIsAddTransactionOpen(true)}
+                    type="button"
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.96 }}
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>Add</span>
+                  </motion.button>
+                </div>
+              </section>
               <ThisMonthSummaryCard
                 activeMonthExpense={kpi.expense}
+                compact
                 net={kpi.income - kpi.expense}
                 totalExpenseAllTime={rollingExpense.allTimeExpense}
                 totalExpenseLast28Days={rollingExpense.last28Days}
@@ -536,4 +583,8 @@ function isAuthError(message: string): boolean {
     normalizedMessage.includes("unauthorized") ||
     normalizedMessage.includes("token")
   );
+}
+
+function getInitial(value: string): string {
+  return value.trim().charAt(0).toUpperCase() || "S";
 }

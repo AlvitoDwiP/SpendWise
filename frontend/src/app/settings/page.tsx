@@ -90,15 +90,53 @@ export default function SettingsPage() {
     newPassword: string;
     confirmPassword: string;
   }) {
-    const profile = await updateProfile({ name: payload.name });
-    setUser(profile);
-
-    if (payload.newPassword) {
-      await changePassword({
-        current_password: payload.currentPassword,
-        new_password: payload.newPassword,
-      });
+    if (!user) {
+      throw new Error("User profile is not ready yet.");
     }
+
+    const trimmedName = payload.name.trim();
+    const isNameChanged = trimmedName !== user.name.trim();
+    const hasAnyPassword =
+      payload.currentPassword.length > 0 ||
+      payload.newPassword.length > 0 ||
+      payload.confirmPassword.length > 0;
+
+    if (!isNameChanged && !hasAnyPassword) {
+      throw new Error("No profile changes to save.");
+    }
+
+    let nextUser = user;
+
+    if (isNameChanged) {
+      try {
+        nextUser = await updateProfile({ name: trimmedName });
+        setUser(nextUser);
+      } catch (err) {
+        throw new Error(
+          err instanceof Error ? `Failed to update name: ${err.message}` : "Failed to update name.",
+        );
+      }
+    }
+
+    if (hasAnyPassword) {
+      try {
+        await changePassword({
+          current_password: payload.currentPassword,
+          new_password: payload.newPassword,
+        });
+      } catch (err) {
+        setUser(nextUser);
+        throw new Error(
+          err instanceof Error
+            ? `Name saved, but failed to change password: ${err.message}`
+            : "Name saved, but failed to change password.",
+        );
+      }
+    }
+  }
+
+  async function handleSavePhoto(): Promise<void> {
+    throw new Error("Profile photo upload is not available yet.");
   }
 
   async function handleResetData(): Promise<void> {
@@ -154,6 +192,7 @@ export default function SettingsPage() {
                 setIsDrawerOpen(true);
               }
             }}
+            profilePhotoUrl={user.profile_photo_url}
             userName={user.name}
           />
 
@@ -172,7 +211,12 @@ export default function SettingsPage() {
               </p>
             </section>
 
-            <SettingsProfileSection initialName={user.name} onSave={handleSaveProfile} />
+            <SettingsProfileSection
+              initialName={user.name}
+              initialProfilePhotoUrl={user.profile_photo_url}
+              onSavePhoto={handleSavePhoto}
+              onSaveProfile={handleSaveProfile}
+            />
 
             <div className="pt-2 md:pt-3">
               <SettingsDangerZone onReset={handleResetData} />

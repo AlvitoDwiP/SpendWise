@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Plus } from "lucide-react";
+import { ArrowLeft, List, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { AddTransactionModal } from "../../components/transactions/AddTransactionModal";
@@ -12,6 +13,7 @@ import { TransactionFilters } from "../../components/transactions/TransactionFil
 import { TransactionList } from "../../components/transactions/TransactionList";
 import { TransactionLoadingState } from "../../components/transactions/LoadingState";
 import { useDebouncedValue } from "../../hooks/useDebouncedValue";
+import { DashboardBackground } from "../../components/dashboard/DashboardBackground";
 import {
   deleteTransaction,
   getCategories,
@@ -169,38 +171,51 @@ export default function TransactionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0f10]">
-      <div className="fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 via-transparent to-purple-900/10" />
-        <div className="absolute left-1/4 top-1/2 h-96 w-96 rounded-full bg-blue-600/5 blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/3 h-80 w-80 rounded-full bg-purple-600/5 blur-3xl" />
-      </div>
+    <main className="relative min-h-screen overflow-x-hidden bg-[#0f0f10] px-4 pb-10 pt-5 text-white sm:px-6 lg:px-8">
+      <DashboardBackground />
 
-      <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <h1 className="text-3xl font-bold text-white">Transactions</h1>
-            <p className="mt-1 text-slate-400">
-              Manage all transactions from one place.
-            </p>
-          </motion.div>
+      <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-6">
+        <motion.header
+          className="flex flex-col gap-5 rounded-3xl border border-white/10 bg-white/[0.045] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.24)] backdrop-blur-xl sm:p-6 lg:flex-row lg:items-center lg:justify-between"
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.24, ease: "easeOut" }}
+        >
+          <div className="min-w-0">
+            <Link
+              className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-white/55 transition hover:text-purple-300"
+              href="/dashboard"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Dashboard
+            </Link>
+            <div className="flex items-start gap-4">
+              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-purple-500/15 text-purple-300">
+                <List className="h-6 w-6" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/35">
+                  SpendWise
+                </p>
+                <h1 className="mt-2 text-3xl font-bold tracking-normal text-white sm:text-4xl">
+                  Transactions
+                </h1>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-white/55">
+                  Manage all transactions from one place.
+                </p>
+              </div>
+            </div>
+          </div>
 
-          <motion.button
-            className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-500 px-4 py-2 font-medium text-white"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+          <button
+            className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-500 to-indigo-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-purple-500/20 transition hover:scale-[1.01] active:scale-[0.98] sm:w-auto"
             onClick={() => setIsAddTransactionOpen(true)}
-            transition={{ duration: 0.3, delay: 0.1 }}
             type="button"
           >
-            <Plus size={20} />
+            <Plus className="h-4 w-4" />
             Add Transaction
-          </motion.button>
-        </div>
+          </button>
+        </motion.header>
 
         {error ? (
           <motion.div
@@ -213,11 +228,11 @@ export default function TransactionsPage() {
         ) : null}
 
         <motion.div
-          className="mb-6"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-        >
+            className="mb-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+          >
           <TransactionFilters
             onSearchChange={setSearch}
             onTypeChange={setType}
@@ -313,7 +328,7 @@ export default function TransactionsPage() {
           transaction={deletingTransaction}
         />
       ) : null}
-    </div>
+    </main>
   );
 }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Pencil, Trash2, ArrowDownLeft, ArrowUpRight, Wallet } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -17,22 +18,27 @@ export function RecentTransactionsCard({
   onEditTransaction,
   transactions,
 }: RecentTransactionsCardProps) {
+  const visibleTransactions = transactions.slice(0, 4);
+
   return (
-    <section className="min-h-[420px] rounded-2xl border border-white/10 bg-white/5 p-5 shadow-2xl shadow-black/20 backdrop-blur-xl sm:p-6">
+    <section className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-2xl shadow-black/20 backdrop-blur-xl sm:p-6">
       <div className="mb-5 flex items-center justify-between gap-4">
         <h2 className="text-xl font-semibold text-white">Recent Transactions</h2>
-        <button className="text-sm font-medium text-purple-300" type="button">
+        <Link
+          className="rounded-md px-2 py-1 text-sm font-medium text-purple-300 transition hover:text-purple-200"
+          href="/transactions"
+        >
           See all
-        </button>
+        </Link>
       </div>
 
       <div className="space-y-2">
-        {transactions.length === 0 ? (
+        {visibleTransactions.length === 0 ? (
           <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-10 text-center text-sm text-white/45">
             No recent transactions yet.
           </div>
         ) : (
-          transactions.map((transaction, index) => (
+          visibleTransactions.map((transaction, index) => (
             <TransactionItem
               index={index}
               key={transaction.id}

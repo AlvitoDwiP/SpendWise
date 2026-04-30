@@ -2,6 +2,7 @@ import { formatRupiah } from "../../lib/format";
 
 type ThisMonthSummaryCardProps = {
   activeMonthExpense: number;
+  compact?: boolean;
   net: number;
   totalExpenseAllTime: number;
   totalExpenseLast28Days: number;
@@ -10,6 +11,7 @@ type ThisMonthSummaryCardProps = {
 
 export function ThisMonthSummaryCard({
   activeMonthExpense,
+  compact = false,
   net,
   totalExpenseAllTime,
   totalExpenseLast28Days,
@@ -20,10 +22,10 @@ export function ThisMonthSummaryCard({
   const avgMonthly = activeMonthExpense > 0 ? activeMonthExpense : totalExpenseAllTime;
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-2xl shadow-black/20 backdrop-blur-xl sm:p-6">
+    <section className={`rounded-2xl border border-white/10 bg-white/5 shadow-2xl shadow-black/20 backdrop-blur-xl ${compact ? "p-4" : "p-5 sm:p-6"}`}>
       <h2 className="text-xl font-semibold text-white">Spending Insights</h2>
       <p className="mt-1 text-sm text-white/55">Short window averages for quick decisions.</p>
-      <div className="mt-5 space-y-3">
+      <div className={`space-y-3 ${compact ? "mt-4" : "mt-5"}`}>
         <SummaryRow hint="Last 7 days" label="Avg daily spend" tone="expense" value={avgDaily} />
         <SummaryRow hint="Last 4 weeks" label="Avg weekly spend" tone="expense" value={avgWeekly} />
         <SummaryRow label="Avg monthly spend" tone="expense" value={avgMonthly} />

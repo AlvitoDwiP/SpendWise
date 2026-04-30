@@ -1,33 +1,69 @@
 "use client";
 
-import { useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 
 type SettingsProfileSectionProps = {
   initialName: string;
-  onSave: (payload: {
+  initialProfilePhotoUrl?: string | null;
+  onSaveProfile: (payload: {
     name: string;
     currentPassword: string;
     newPassword: string;
     confirmPassword: string;
   }) => Promise<void>;
+  onSavePhoto: (file: File) => Promise<void>;
 };
 
-export function SettingsProfileSection({ initialName, onSave }: SettingsProfileSectionProps) {
+const MAX_PHOTO_SIZE_BYTES = 2 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+export function SettingsProfileSection({
+  initialName,
+  initialProfilePhotoUrl,
+  onSavePhoto,
+  onSaveProfile,
+}: SettingsProfileSectionProps) {
   const [name, setName] = useState(initialName);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
+  const [profileError, setProfileError] = useState("");
+  const [profileSuccess, setProfileSuccess] = useState("");
+  const [isProfileSaving, setIsProfileSaving] = useState(false);
+  const [selectedPhotoFile, setSelectedPhotoFile] = useState<File | null>(null);
+  const [photoError, setPhotoError] = useState("");
+  const [photoSuccess, setPhotoSuccess] = useState("");
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+
+  const selectedPhotoPreviewUrl = useMemo(() => {
+    if (!selectedPhotoFile) {
+      return "";
+    }
+    return URL.createObjectURL(selectedPhotoFile);
+  }, [selectedPhotoFile]);
+
+  useEffect(() => {
+    return () => {
+      if (selectedPhotoPreviewUrl) {
+        URL.revokeObjectURL(selectedPhotoPreviewUrl);
+      }
+    };
+  }, [selectedPhotoPreviewUrl]);
+
+  const isNameChanged = useMemo(
+    () => name.trim() !== initialName.trim(),
+    [initialName, name],
+  );
+
+  const hasAnyPassword = useMemo(
+    () => currentPassword.length > 0 || newPassword.length > 0 || confirmPassword.length > 0,
+    [confirmPassword, currentPassword, newPassword],
+  );
 
   const validationMessage = useMemo(() => {
     if (!name.trim()) {
       return "Name is required.";
     }
-
-    const hasAnyPassword =
-      currentPassword.length > 0 || newPassword.length > 0 || confirmPassword.length > 0;
 
     if (!hasAnyPassword) {
       return "";
@@ -46,111 +82,220 @@ export function SettingsProfileSection({ initialName, onSave }: SettingsProfileS
     }
 
     return "";
-  }, [confirmPassword, currentPassword, name, newPassword]);
+  }, [confirmPassword, currentPassword, hasAnyPassword, name, newPassword]);
 
-  const canSubmit = !isSaving && !validationMessage;
+  const hasMeaningfulChange = isNameChanged || hasAnyPassword;
+  const canSubmitProfile =
+    !isProfileSaving && hasMeaningfulChange && !validationMessage;
+  const canSavePhoto = !!selectedPhotoFile && !isUploadingPhoto;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!canSubmit) {
-      setError(validationMessage || "Please check your input.");
+    if (!canSubmitProfile) {
+      setProfileError(validationMessage || "Please check your input.");
       return;
     }
 
-    setIsSaving(true);
-    setError("");
-    setSuccess("");
+    setIsProfileSaving(true);
+    setProfileError("");
+    setProfileSuccess("");
 
     try {
-      await onSave({
+      await onSaveProfile({
         name: name.trim(),
         currentPassword,
         newPassword,
         confirmPassword,
       });
 
-      setSuccess("Profile updated successfully.");
+      setProfileSuccess("Profile updated successfully.");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update profile.");
+      setProfileError(err instanceof Error ? err.message : "Failed to update profile.");
     } finally {
-      setIsSaving(false);
+      setIsProfileSaving(false);
     }
   }
+
+  function handleSelectPhoto(event: FormEvent<HTMLInputElement>) {
+    const target = event.currentTarget;
+    const file = target.files?.[0];
+
+    setPhotoError("");
+    setPhotoSuccess("");
+
+    if (!file) {
+      setSelectedPhotoFile(null);
+      return;
+    }
+
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      setSelectedPhotoFile(null);
+      setPhotoError("Photo must be JPG, JPEG, PNG, or WEBP.");
+      target.value = "";
+      return;
+    }
+
+    if (file.size > MAX_PHOTO_SIZE_BYTES) {
+      setSelectedPhotoFile(null);
+      setPhotoError("Photo size must be 2MB or less.");
+      target.value = "";
+      return;
+    }
+
+    setSelectedPhotoFile(file);
+  }
+
+  async function handleSavePhoto() {
+    if (!selectedPhotoFile) {
+      setPhotoError("Please choose a photo first.");
+      return;
+    }
+
+    setIsUploadingPhoto(true);
+    setPhotoError("");
+    setPhotoSuccess("");
+
+    try {
+      await onSavePhoto(selectedPhotoFile);
+      setPhotoSuccess("Profile photo updated successfully.");
+      setSelectedPhotoFile(null);
+    } catch (err) {
+      setPhotoError(err instanceof Error ? err.message : "Failed to upload profile photo.");
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  }
+
+  const displayPhoto = selectedPhotoPreviewUrl || initialProfilePhotoUrl || "";
 
   return (
     <section className="rounded-2xl border border-white/10 bg-[#1c1c1e]/90 p-4 shadow-2xl shadow-black/20 backdrop-blur-xl sm:p-6">
       <h2 className="text-xl font-semibold text-white">Profile</h2>
-      <p className="mt-1 text-sm text-white/55">Update your name and account password.</p>
+      <p className="mt-1 text-sm text-white/55">
+        Manage your photo, name, and account password.
+      </p>
+
+      <div className="mt-5 rounded-xl border border-white/10 bg-white/[0.03] p-4">
+        <p className="text-sm font-medium text-white/80">Profile Photo</p>
+        <div className="mt-3 flex flex-col items-start gap-4">
+          <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-full border border-white/10 bg-white/10 text-xl font-semibold text-white">
+            {displayPhoto ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img alt={`${name} profile`} className="h-full w-full object-cover" src={displayPhoto} />
+            ) : (
+              getInitial(name)
+            )}
+          </div>
+
+          <div className="w-full">
+            <label className="inline-flex h-10 cursor-pointer items-center rounded-lg border border-white/10 bg-white/5 px-3 text-sm font-medium text-white/80 transition hover:bg-white/10">
+              {selectedPhotoFile ? "Change Photo" : "Upload Photo"}
+              <input
+                accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                className="hidden"
+                onInput={handleSelectPhoto}
+                type="file"
+              />
+            </label>
+            <button
+              className="ml-2 h-10 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-500 px-4 text-sm font-semibold text-white shadow-lg shadow-purple-500/20 transition disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={!canSavePhoto}
+              onClick={handleSavePhoto}
+              type="button"
+            >
+              {isUploadingPhoto ? "Saving photo..." : "Save Photo"}
+            </button>
+            <p className="mt-2 text-xs text-white/45">Allowed: JPG, JPEG, PNG, WEBP. Max 2MB.</p>
+            {photoError ? <p className="mt-2 text-sm text-red-300">{photoError}</p> : null}
+            {photoSuccess ? <p className="mt-2 text-sm text-emerald-300">{photoSuccess}</p> : null}
+          </div>
+        </div>
+      </div>
 
       <form className="mt-5 space-y-4" onSubmit={handleSubmit}>
-        <Field label="Name">
-          <input
-            className="h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-purple-400/50 focus:ring-2 focus:ring-purple-400/20"
-            onChange={(event) => setName(event.target.value)}
-            placeholder="Your name"
-            type="text"
-            value={name}
-          />
-        </Field>
-
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <Field label="Current Password">
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+          <p className="text-sm font-medium text-white/80">Name</p>
+          <Field label="Display Name">
             <input
-              autoComplete="current-password"
               className="h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-purple-400/50 focus:ring-2 focus:ring-purple-400/20"
-              onChange={(event) => setCurrentPassword(event.target.value)}
-              placeholder="Current password"
-              type="password"
-              value={currentPassword}
-            />
-          </Field>
-
-          <Field label="New Password">
-            <input
-              autoComplete="new-password"
-              className="h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-purple-400/50 focus:ring-2 focus:ring-purple-400/20"
-              onChange={(event) => setNewPassword(event.target.value)}
-              placeholder="At least 6 characters"
-              type="password"
-              value={newPassword}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="Your name"
+              type="text"
+              value={name}
             />
           </Field>
         </div>
 
-        <Field label="Confirm New Password">
-          <input
-            autoComplete="new-password"
-            className="h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-purple-400/50 focus:ring-2 focus:ring-purple-400/20"
-            onChange={(event) => setConfirmPassword(event.target.value)}
-            placeholder="Repeat new password"
-            type="password"
-            value={confirmPassword}
-          />
-        </Field>
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+          <p className="text-sm font-medium text-white/80">Change Password</p>
+          <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Field label="Current Password">
+              <input
+                autoComplete="current-password"
+                className="h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-purple-400/50 focus:ring-2 focus:ring-purple-400/20"
+                onChange={(event) => setCurrentPassword(event.target.value)}
+                placeholder="Current password"
+                type="password"
+                value={currentPassword}
+              />
+            </Field>
 
-        {error ? <p className="text-sm text-red-300">{error}</p> : null}
-        {success ? <p className="text-sm text-emerald-300">{success}</p> : null}
-        {!error && validationMessage ? <p className="text-sm text-amber-300">{validationMessage}</p> : null}
+            <Field label="New Password">
+              <input
+                autoComplete="new-password"
+                className="h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-purple-400/50 focus:ring-2 focus:ring-purple-400/20"
+                onChange={(event) => setNewPassword(event.target.value)}
+                placeholder="At least 6 characters"
+                type="password"
+                value={newPassword}
+              />
+            </Field>
+          </div>
+
+          <div className="mt-4">
+            <Field label="Confirm New Password">
+              <input
+                autoComplete="new-password"
+                className="h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-purple-400/50 focus:ring-2 focus:ring-purple-400/20"
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                placeholder="Repeat new password"
+                type="password"
+                value={confirmPassword}
+              />
+            </Field>
+          </div>
+        </div>
+
+        {profileError ? <p className="text-sm text-red-300">{profileError}</p> : null}
+        {profileSuccess ? <p className="text-sm text-emerald-300">{profileSuccess}</p> : null}
+        {!profileError && validationMessage ? <p className="text-sm text-amber-300">{validationMessage}</p> : null}
+        {!profileError && !validationMessage && !hasMeaningfulChange ? (
+          <p className="text-sm text-white/45">No profile changes yet.</p>
+        ) : null}
 
         <button
           className="h-11 w-full rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 px-4 text-sm font-semibold text-white shadow-lg shadow-purple-500/20 transition disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:min-w-36"
-          disabled={!canSubmit}
+          disabled={!canSubmitProfile}
           type="submit"
         >
-          {isSaving ? "Saving..." : "Save"}
+          {isProfileSaving ? "Saving..." : "Save Profile"}
         </button>
       </form>
     </section>
   );
 }
 
+function getInitial(value: string): string {
+  return value.trim().charAt(0).toUpperCase() || "S";
+}
+
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <label className="block space-y-2">
+    <label className="mt-3 block space-y-2 first:mt-0">
       <span className="text-sm font-medium text-white/80">{label}</span>
       {children}
     </label>

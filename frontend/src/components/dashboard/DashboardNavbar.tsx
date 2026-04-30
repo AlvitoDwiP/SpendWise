@@ -15,6 +15,7 @@ type DashboardNavbarProps = {
   onAddTransaction: () => void;
   onMenuClick: () => void;
   onMonthChange?: (key: string) => void;
+  profilePhotoUrl?: string | null;
   selectedMonthKey?: string;
   userName: string;
 };
@@ -26,6 +27,7 @@ export function DashboardNavbar({
   onAddTransaction,
   onMenuClick,
   onMonthChange,
+  profilePhotoUrl,
   selectedMonthKey,
   userName,
 }: DashboardNavbarProps) {
@@ -44,11 +46,25 @@ export function DashboardNavbar({
         </motion.button>
 
         <div className="min-w-0">
-          <h1 className="truncate text-2xl font-semibold text-white">
-            {greeting}, {userName} ☀️
-          </h1>
+          <div className="mb-1 flex items-center gap-3">
+            <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full border border-white/10 bg-white/10 text-xs font-semibold text-white">
+              {profilePhotoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  alt={`${userName} profile`}
+                  className="h-full w-full object-cover"
+                  src={profilePhotoUrl}
+                />
+              ) : (
+                getInitial(userName)
+              )}
+            </div>
+            <h1 className="truncate text-2xl font-semibold text-white">
+              {greeting}, {userName}
+            </h1>
+          </div>
           <p className="mt-1 max-w-xl text-sm leading-6 text-white/60">
-            Manage your finances with confidence today.
+            Take full control of your financial future starting today.
           </p>
         </div>
       </div>
@@ -85,4 +101,8 @@ export function DashboardNavbar({
       </div>
     </header>
   );
+}
+
+function getInitial(value: string): string {
+  return value.trim().charAt(0).toUpperCase() || "S";
 }
