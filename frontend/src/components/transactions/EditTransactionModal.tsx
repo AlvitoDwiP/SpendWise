@@ -13,6 +13,7 @@ import {
   type TransactionPayload,
 } from "../../lib/api";
 import { TransactionForm, type TransactionFormValues } from "./TransactionForm";
+import { isValidDate, parseTransactionDate, toRFC3339 } from "./dateUtils";
 
 type EditTransactionModalProps = {
   onClose: () => void;
@@ -81,7 +82,7 @@ export function EditTransactionModal({
       setError("Category is required.");
       return;
     }
-    if (!formValues.date) {
+    if (!isValidDate(formValues.date)) {
       setError("Date is required.");
       return;
     }
@@ -95,7 +96,7 @@ export function EditTransactionModal({
       category_id: Number(formValues.categoryId),
       note: formValues.note.trim() || undefined,
       title: buildTransactionTitle(formValues.type, category?.name),
-      transaction_date: formValues.date,
+      transaction_date: toRFC3339(formValues.date),
       type: formValues.type,
     };
 
@@ -125,7 +126,7 @@ export function EditTransactionModal({
     !!categoriesError ||
     !formValues.type ||
     !formValues.categoryId ||
-    !formValues.date ||
+    !isValidDate(formValues.date) ||
     formValues.amount === null ||
     formValues.amount <= 0;
 
@@ -218,7 +219,7 @@ function toFormValues(transaction: Transaction): TransactionFormValues {
   return {
     amount: transaction.amount,
     categoryId: String(transaction.category_id),
-    date: transaction.transaction_date.slice(0, 10),
+    date: parseTransactionDate(transaction.transaction_date),
     note: transaction.note ?? "",
     type: transaction.type,
   };

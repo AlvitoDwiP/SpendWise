@@ -17,6 +17,7 @@ import {
   type TransactionField,
   type TransactionFormValues,
 } from "./TransactionForm";
+import { isValidDate, parseTransactionDate, toRFC3339 } from "./dateUtils";
 import { ReceiptUploadStep } from "./ReceiptUploadStep";
 
 type AddTransactionModalProps = {
@@ -29,7 +30,7 @@ type ModalMode = "manual" | "scan";
 type ScanSuggestion = {
   amount: number;
   categoryId: string;
-  date: string;
+  date: Date;
   note: string;
   type: CategoryType;
   warning?: string;
@@ -141,7 +142,7 @@ export function AddTransactionModal({
         ...current,
         amount: suggestion.amount,
         categoryId: suggestion.categoryId,
-        date: suggestion.date,
+        date: parseTransactionDate(suggestion.date) ?? new Date(),
         note: suggestion.note,
         type: suggestion.type,
       }));
@@ -172,7 +173,7 @@ export function AddTransactionModal({
       setError("Category is required.");
       return;
     }
-    if (!formValues.date) {
+    if (!isValidDate(formValues.date)) {
       setError("Date is required.");
       return;
     }
@@ -186,7 +187,7 @@ export function AddTransactionModal({
       category_id: Number(formValues.categoryId),
       note: formValues.note.trim() || undefined,
       title: buildTransactionTitle(formValues.type, category?.name),
-      transaction_date: formValues.date,
+      transaction_date: toRFC3339(formValues.date),
       type: formValues.type,
     };
 
@@ -345,7 +346,7 @@ export function AddTransactionModal({
                 !!categoriesError ||
                 !formValues.type ||
                 !formValues.categoryId ||
-                !formValues.date ||
+                !isValidDate(formValues.date) ||
                 formValues.amount === null ||
                 formValues.amount <= 0
               }
@@ -364,14 +365,10 @@ function defaultFormValues(): TransactionFormValues {
   return {
     amount: null,
     categoryId: "",
-    date: getTodayDate(),
+    date: new Date(),
     note: "",
     type: "",
   };
-}
-
-function getTodayDate(): string {
-  return new Date().toISOString().slice(0, 10);
 }
 
 function buildTransactionTitle(type: CategoryType, categoryName?: string): string {
@@ -419,7 +416,7 @@ async function mockScanReceipt(
   return {
     amount: 125000,
     categoryId: preferredCategory ? String(preferredCategory.id) : "",
-    date: getTodayDate(),
+    date: parseTransactionDate(new Date().toISOString().slice(0, 10)) ?? new Date(),
     note: "Scanned receipt",
     type: "expense",
     warning: preferredCategory

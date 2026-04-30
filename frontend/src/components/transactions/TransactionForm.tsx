@@ -1,6 +1,9 @@
 "use client";
 
+import DatePicker from "react-datepicker";
+
 import type { Category, CategoryType } from "../../lib/api";
+import { isValidDate } from "./dateUtils";
 
 export type TransactionField = "amount" | "categoryId" | "date" | "note";
 
@@ -8,7 +11,7 @@ export type TransactionFormValues = {
   type: CategoryType | "";
   amount: number | null;
   categoryId: string;
-  date: string;
+  date: Date | null;
   note: string;
 };
 
@@ -118,14 +121,21 @@ export function TransactionForm({
 
       <label className="block">
         <span className="mb-2 block text-sm font-medium text-white/75">Date</span>
-        <input
-          className={`w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white outline-none transition focus:border-purple-400/50 focus:ring-2 focus:ring-purple-400/25 disabled:cursor-not-allowed disabled:opacity-60 ${highlighted.has("date") ? highlightClass : ""}`}
+        <DatePicker
+          calendarClassName="!rounded-2xl !border !border-white/10 !bg-[#1c1c1e] !text-white !shadow-2xl"
+          className={`w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-purple-400/50 focus:ring-2 focus:ring-purple-400/25 disabled:cursor-not-allowed disabled:opacity-60 ${highlighted.has("date") ? highlightClass : ""}`}
+          dateFormat="dd MMM yyyy"
           disabled={disabled}
-          onChange={(event) =>
-            onChange({ ...effectiveValues, date: event.target.value })
+          onChange={(date: Date | null) =>
+            onChange({
+              ...effectiveValues,
+              date: date ? new Date(date) : null,
+            })
           }
-          type="date"
-          value={effectiveValues.date}
+          placeholderText="Select date"
+          popperClassName="z-[80]"
+          selected={isValidDate(effectiveValues.date) ? effectiveValues.date : null}
+          wrapperClassName="w-full"
         />
       </label>
 
