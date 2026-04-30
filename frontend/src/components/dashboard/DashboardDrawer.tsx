@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -21,14 +23,14 @@ type DashboardDrawerProps = {
 
 const menuItems: {
   label: string;
+  href: string;
   icon: LucideIcon;
-  active?: boolean;
 }[] = [
-  { label: "Home", icon: Home, active: true },
-  { label: "Transactions", icon: List },
-  { label: "Category", icon: Folder },
-  { label: "Report", icon: BarChart3 },
-  { label: "Settings", icon: Settings },
+  { label: "Home", href: "/dashboard", icon: Home },
+  { label: "Transactions", href: "/transactions", icon: List },
+  { label: "Category", href: "/categories", icon: Folder },
+  { label: "Report", href: "/report", icon: BarChart3 },
+  { label: "Settings", href: "/settings", icon: Settings },
 ];
 
 export function DashboardDrawer({
@@ -36,6 +38,8 @@ export function DashboardDrawer({
   onClose,
   onLogout,
 }: DashboardDrawerProps) {
+  const pathname = usePathname();
+
   useEffect(() => {
     if (!isOpen) {
       return;
@@ -95,26 +99,27 @@ export function DashboardDrawer({
             <nav className="relative space-y-2">
               {menuItems.map((item) => {
                 const Icon = item.icon;
+                const isActive = pathname === item.href;
 
                 return (
-                  <button
+                  <Link
                     className={`flex h-[52px] w-full items-center justify-between rounded-2xl px-4 text-left transition ${
-                      item.active
+                      isActive
                         ? "bg-purple-500/15 text-purple-300"
                         : "text-white/65 hover:bg-white/5 hover:text-white"
                     }`}
+                    href={item.href}
                     key={item.label}
-                    onClick={item.active ? onClose : undefined}
-                    type="button"
+                    onClick={onClose}
                   >
                     <span className="flex items-center gap-3">
                       <Icon className="h-5 w-5" />
                       <span className="font-medium">{item.label}</span>
                     </span>
-                    {item.active ? (
+                    {isActive ? (
                       <span className="h-2 w-2 rounded-full bg-purple-400 shadow-lg shadow-purple-400/50" />
                     ) : null}
-                  </button>
+                  </Link>
                 );
               })}
             </nav>

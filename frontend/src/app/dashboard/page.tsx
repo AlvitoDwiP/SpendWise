@@ -21,7 +21,10 @@ import { RecentTransactionsCard } from "../../components/dashboard/RecentTransac
 import { SpendingOverviewCard } from "../../components/dashboard/SpendingOverviewCard";
 import { ThisMonthSummaryCard } from "../../components/dashboard/ThisMonthSummaryCard";
 import { AddTransactionModal } from "../../components/transactions/AddTransactionModal";
+import { DeleteTransactionConfirmModal } from "../../components/transactions/DeleteTransactionConfirmModal";
+import { EditTransactionModal } from "../../components/transactions/EditTransactionModal";
 import {
+  deleteTransaction,
   getDashboardSummary,
   getMe,
   getRecentTransactions,
@@ -43,8 +46,12 @@ export default function DashboardPage() {
   const [dashboard, setDashboard] = useState<DashboardState | null>(null);
   const [error, setError] = useState("");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [deletingTransaction, setDeletingTransaction] = useState<Transaction | null>(null);
+  const [isDeletingTransaction, setIsDeletingTransaction] = useState(false);
+  const [deleteTransactionError, setDeleteTransactionError] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -99,6 +106,104 @@ export default function DashboardPage() {
   const dateLabel = useMemo(() => getCurrentMonthLabel(), []);
   const greeting = useMemo(() => getGreeting(), []);
 
+  async function refreshDashboardState() {
+    try {
+      const [summary, recentTransactions] = await Promise.all([
+        getDashboardSummary(),
+        getRecentTransactions(),
+      ]);
+      setDashboard((current) =>
+        current
+          ? {
+              ...current,
+              recentTransactions,
+              summary,
+            }
+          : current,
+      );
+    } catch {
+      // Keep optimistic state if refresh fails.
+    }
+  }
+
+  function patchTransactionSummary(
+    current: DashboardState,
+    previous: Transaction,
+    next: Transaction | null,
+  ): DashboardSummary {
+    const revertBalance =
+      previous.type === "income"
+        ? current.summary.current_balance - previous.amount
+        : current.summary.current_balance + previous.amount;
+    const revertedIncome =
+      previous.type === "income"
+        ? current.summary.this_month_income - previous.amount
+        : current.summary.this_month_income;
+    const revertedExpense =
+      previous.type === "expense"
+        ? current.summary.this_month_expense - previous.amount
+        : current.summary.this_month_expense;
+
+    if (!next) {
+      return {
+        ...current.summary,
+        current_balance: revertBalance,
+        this_month_income: revertedIncome,
+        this_month_expense: revertedExpense,
+        this_month_transaction_count: Math.max(
+          0,
+          current.summary.this_month_transaction_count - 1,
+        ),
+      };
+    }
+
+    return {
+      ...current.summary,
+      current_balance:
+        next.type === "income"
+          ? revertBalance + next.amount
+          : revertBalance - next.amount,
+      this_month_income:
+        next.type === "income" ? revertedIncome + next.amount : revertedIncome,
+      this_month_expense:
+        next.type === "expense" ? revertedExpense + next.amount : revertedExpense,
+      this_month_transaction_count: current.summary.this_month_transaction_count,
+    };
+  }
+
+  async function handleDeleteTransaction() {
+    if (!deletingTransaction) {
+      return;
+    }
+
+    setDeleteTransactionError("");
+    setIsDeletingTransaction(true);
+
+    try {
+      await deleteTransaction(deletingTransaction.id);
+      setDashboard((current) => {
+        if (!current) {
+          return current;
+        }
+        return {
+          ...current,
+          recentTransactions: current.recentTransactions.filter(
+            (item) => item.id !== deletingTransaction.id,
+          ),
+          summary: patchTransactionSummary(current, deletingTransaction, null),
+        };
+      });
+      setDeletingTransaction(null);
+      await refreshDashboardState();
+    } catch (err) {
+      setDeleteTransactionError(
+        err instanceof Error ? err.message : "Failed to delete transaction.",
+      );
+    } finally {
+      setIsDeletingTransaction(false);
+    }
+  }
+
   function handleLogout() {
     logout();
     setIsDrawerOpen(false);
@@ -151,6 +256,7 @@ export default function DashboardPage() {
             dateLabel={dateLabel}
             greeting={greeting}
             isSidebarOpen={isSidebarOpen}
+            onAddTransaction={() => setIsAddTransactionOpen(true)}
             onMenuClick={() => {
               const mediaQuery = window.matchMedia("(min-width: 768px)");
               if (mediaQuery.matches) {
@@ -174,13 +280,17 @@ export default function DashboardPage() {
               balance={summary.current_balance}
               greeting={greeting}
               monthlyIncome={summary.this_month_income}
-              onAddTransaction={() => setIsAddModalOpen(true)}
               transactionCount={summary.this_month_transaction_count}
               userName={user.name}
             />
             <MobileBalancePanel
               expense={summary.this_month_expense}
               income={summary.this_month_income}
+              onDeleteTransaction={(transaction) => {
+                setDeleteTransactionError("");
+                setDeletingTransaction(transaction);
+              }}
+              onEditTransaction={(transaction) => setEditingTransaction(transaction)}
               transactions={recentTransactions}
             />
             <div className="hidden md:block">
@@ -203,14 +313,21 @@ export default function DashboardPage() {
               income={summary.this_month_income}
               transactionCount={summary.this_month_transaction_count}
             />
-            <RecentTransactionsCard transactions={recentTransactions} />
+            <RecentTransactionsCard
+              onDeleteTransaction={(transaction) => {
+                setDeleteTransactionError("");
+                setDeletingTransaction(transaction);
+              }}
+              onEditTransaction={(transaction) => setEditingTransaction(transaction)}
+              transactions={recentTransactions}
+            />
           </div>
         </motion.div>
         </div>
       </motion.div>
 
       <MobileBottomNav
-        onAddTransaction={() => setIsAddModalOpen(true)}
+        onAddTransaction={() => setIsAddTransactionOpen(true)}
         onLogout={handleLogout}
       />
       <DashboardDrawer
@@ -218,9 +335,9 @@ export default function DashboardPage() {
         onClose={() => setIsDrawerOpen(false)}
         onLogout={handleLogout}
       />
-      {isAddModalOpen ? (
+      {isAddTransactionOpen ? (
         <AddTransactionModal
-          onClose={() => setIsAddModalOpen(false)}
+          onClose={() => setIsAddTransactionOpen(false)}
           onCreated={(createdTransaction) => {
             setDashboard((current) => {
               if (!current) {
@@ -252,7 +369,50 @@ export default function DashboardPage() {
                 },
               };
             });
+            refreshDashboardState();
           }}
+        />
+      ) : null}
+      {editingTransaction ? (
+        <EditTransactionModal
+          onClose={() => setEditingTransaction(null)}
+          onUpdated={(updatedTransaction) => {
+            setDashboard((current) => {
+              if (!current) {
+                return current;
+              }
+              const previous = current.recentTransactions.find(
+                (item) => item.id === updatedTransaction.id,
+              );
+              if (!previous) {
+                return current;
+              }
+              return {
+                ...current,
+                recentTransactions: current.recentTransactions.map((item) =>
+                  item.id === updatedTransaction.id ? { ...item, ...updatedTransaction } : item,
+                ),
+                summary: patchTransactionSummary(current, previous, updatedTransaction),
+              };
+            });
+            setEditingTransaction(null);
+            refreshDashboardState();
+          }}
+          transaction={editingTransaction}
+        />
+      ) : null}
+      {deletingTransaction ? (
+        <DeleteTransactionConfirmModal
+          error={deleteTransactionError}
+          isDeleting={isDeletingTransaction}
+          onClose={() => {
+            if (!isDeletingTransaction) {
+              setDeletingTransaction(null);
+              setDeleteTransactionError("");
+            }
+          }}
+          onConfirm={handleDeleteTransaction}
+          transaction={deletingTransaction}
         />
       ) : null}
     </main>

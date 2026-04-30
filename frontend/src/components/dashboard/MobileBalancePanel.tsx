@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDownLeft, Info, WalletCards } from "lucide-react";
+import { ArrowDownLeft, Info, Pencil, Trash2, WalletCards } from "lucide-react";
 import { motion } from "framer-motion";
 
 import type { Transaction } from "../../lib/api";
@@ -9,12 +9,16 @@ import { formatDate, formatRupiah } from "../../lib/format";
 type MobileBalancePanelProps = {
   expense: number;
   income: number;
+  onDeleteTransaction: (transaction: Transaction) => void;
+  onEditTransaction: (transaction: Transaction) => void;
   transactions: Transaction[];
 };
 
 export function MobileBalancePanel({
   expense,
   income,
+  onDeleteTransaction,
+  onEditTransaction,
   transactions,
 }: MobileBalancePanelProps) {
   const totalRecentExpense = transactions
@@ -62,6 +66,8 @@ export function MobileBalancePanel({
               <MobileTransactionItem
                 index={index}
                 key={transaction.id}
+                onDeleteTransaction={onDeleteTransaction}
+                onEditTransaction={onEditTransaction}
                 transaction={transaction}
               />
             ))
@@ -109,9 +115,13 @@ function MobileStatCard({
 
 function MobileTransactionItem({
   index,
+  onDeleteTransaction,
+  onEditTransaction,
   transaction,
 }: {
   index: number;
+  onDeleteTransaction: (transaction: Transaction) => void;
+  onEditTransaction: (transaction: Transaction) => void;
   transaction: Transaction;
 }) {
   const isExpense = transaction.type === "expense";
@@ -122,6 +132,7 @@ function MobileTransactionItem({
       className="flex items-center justify-between gap-3 rounded-2xl p-3 transition hover:bg-white/5"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
+      onClick={() => onEditTransaction(transaction)}
       transition={{ delay: 0.14 + index * 0.04, duration: 0.28 }}
     >
       <div className="flex min-w-0 items-center gap-3">
@@ -170,6 +181,28 @@ function MobileTransactionItem({
         <p className="mt-2 text-xs text-white/35">
           {formatDate(transaction.transaction_date)}
         </p>
+        <div className="mt-2 flex items-center justify-end gap-1">
+          <button
+            className="grid h-7 w-7 place-items-center rounded-lg border border-white/10 bg-white/5 text-white/70"
+            onClick={(event) => {
+              event.stopPropagation();
+              onEditTransaction(transaction);
+            }}
+            type="button"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
+          <button
+            className="grid h-7 w-7 place-items-center rounded-lg border border-red-500/30 bg-red-500/10 text-red-300"
+            onClick={(event) => {
+              event.stopPropagation();
+              onDeleteTransaction(transaction);
+            }}
+            type="button"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        </div>
       </div>
     </motion.article>
   );

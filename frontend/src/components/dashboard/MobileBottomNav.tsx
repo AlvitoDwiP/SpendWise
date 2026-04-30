@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState, type MouseEventHandler } from "react";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import {
@@ -20,10 +21,11 @@ type MobileBottomNavProps = {
 };
 
 type MobileNavButtonProps = {
+  href?: string;
   icon: LucideIcon;
   label: string;
   active?: boolean;
-  onClick?: MouseEventHandler<HTMLButtonElement>;
+  onClick?: MouseEventHandler<HTMLButtonElement | HTMLAnchorElement>;
 };
 
 type MoreMenuItem = {
@@ -84,6 +86,7 @@ export function MobileBottomNav({
   onAddTransaction,
   onLogout,
 }: MobileBottomNavProps) {
+  const pathname = usePathname();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
 
   function closeMoreMenu() {
@@ -118,7 +121,8 @@ export function MobileBottomNav({
       >
         <div className="grid h-full grid-cols-[minmax(0,1fr)_88px_minmax(0,1fr)] items-center px-4">
           <MobileNavButton
-            active
+            active={pathname === "/dashboard"}
+            href="/dashboard"
             icon={Home}
             label="Home"
             onClick={closeMoreMenu}
@@ -128,6 +132,8 @@ export function MobileBottomNav({
 
           <div className="grid h-full grid-cols-2 items-center">
             <MobileNavButton
+              active={pathname === "/report"}
+              href="/report"
               icon={BarChart3}
               label="Report"
               onClick={closeMoreMenu}
@@ -185,16 +191,33 @@ export function MobileBottomNav({
 
 function MobileNavButton({
   active = false,
+  href,
   icon: Icon,
   label,
   onClick,
 }: MobileNavButtonProps) {
+  const className = `flex h-full min-w-0 flex-col items-center justify-center gap-1 text-center transition ${
+    active ? "text-purple-300" : "text-white/45 hover:text-white/70"
+  }`;
+
+  if (href) {
+    return (
+      <Link
+        aria-current={active ? "page" : undefined}
+        className={className}
+        href={href}
+        onClick={onClick}
+      >
+        <Icon className="h-6 w-6" />
+        <span className="text-xs font-medium">{label}</span>
+      </Link>
+    );
+  }
+
   return (
     <button
-      className={`flex h-full min-w-0 flex-col items-center justify-center gap-1 text-center transition ${
-        active ? "text-purple-300" : "text-white/45 hover:text-white/70"
-      }`}
       aria-current={active ? "page" : undefined}
+      className={className}
       onClick={onClick}
       type="button"
     >

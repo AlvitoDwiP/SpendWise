@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 type DashboardNavbarProps = {
   dateLabel: string;
   greeting: string;
+  onAddTransaction: () => void;
   onMenuClick: () => void;
   userName: string;
   isSidebarOpen?: boolean;
@@ -14,6 +15,7 @@ type DashboardNavbarProps = {
 export function DashboardNavbar({
   dateLabel,
   greeting,
+  onAddTransaction,
   onMenuClick,
   userName,
   isSidebarOpen = true,
@@ -56,6 +58,7 @@ export function DashboardNavbar({
 
         <motion.button
           className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-purple-500/20"
+          onClick={onAddTransaction}
           type="button"
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.96 }}
