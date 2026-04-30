@@ -6,7 +6,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Folder, Plus } from "lucide-react";
 
-import { AddCategoryPlaceholderModal } from "../../components/categories/AddCategoryPlaceholderModal";
+import { AddCategoryModal } from "../../components/categories/AddCategoryModal";
+import { DeleteCategoryConfirmModal } from "../../components/categories/DeleteCategoryConfirmModal";
+import { EditCategoryModal } from "../../components/categories/EditCategoryModal";
 import { CategoryList } from "../../components/categories/CategoryList";
 import {
   CategoryEmptyState,
@@ -29,7 +31,12 @@ export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(
+    null,
+  );
 
   const summary = useMemo(
     () =>
@@ -149,14 +156,63 @@ export default function CategoriesPage() {
         ) : categories.length === 0 ? (
           <CategoryEmptyState onAddClick={() => setIsAddModalOpen(true)} />
         ) : (
-          <CategoryList categories={categories} />
+          <CategoryList
+            categories={categories}
+            onDeleteClick={(category) => {
+              setSelectedCategory(category);
+              setIsDeleteModalOpen(true);
+            }}
+            onEditClick={(category) => {
+              setSelectedCategory(category);
+              setIsEditModalOpen(true);
+            }}
+          />
         )}
       </div>
 
-      <AddCategoryPlaceholderModal
+      <AddCategoryModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
+        onCreated={(createdCategory) => {
+          setCategories((current) => [createdCategory, ...current]);
+        }}
       />
+
+      {isEditModalOpen && selectedCategory ? (
+        <EditCategoryModal
+          category={selectedCategory}
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setSelectedCategory(null);
+          }}
+          onUpdated={(updatedCategory) => {
+            setCategories((current) =>
+              current.map((category) =>
+                category.id === updatedCategory.id ? updatedCategory : category,
+              ),
+            );
+            setSelectedCategory(null);
+          }}
+        />
+      ) : null}
+
+      {isDeleteModalOpen && selectedCategory ? (
+        <DeleteCategoryConfirmModal
+          category={selectedCategory}
+          isOpen={isDeleteModalOpen}
+          onClose={() => {
+            setIsDeleteModalOpen(false);
+            setSelectedCategory(null);
+          }}
+          onDeleted={(deletedCategoryId) => {
+            setCategories((current) =>
+              current.filter((category) => category.id !== deletedCategoryId),
+            );
+            setSelectedCategory(null);
+          }}
+        />
+      ) : null}
     </main>
   );
 }
