@@ -11,4 +11,5 @@ func RegisterUserRoutes(router *gin.RouterGroup, db *gorm.DB) {
 	userHandler := handlers.NewUserHandler(db)
 
 	router.GET("/me", userHandler.GetMe)
+	router.POST("/me/reset-data", userHandler.ResetUserData)
 }

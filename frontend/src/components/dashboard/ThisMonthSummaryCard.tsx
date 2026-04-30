@@ -16,6 +16,7 @@ export function ThisMonthSummaryCard({
   return (
     <section className="min-h-[270px] rounded-2xl border border-white/10 bg-white/5 p-5 shadow-2xl shadow-black/20 backdrop-blur-xl sm:p-6">
       <h2 className="text-xl font-semibold text-white">This Month</h2>
+      <p className="mt-1 text-xs text-white/50">Only transactions in current month.</p>
       <div className="mt-6 space-y-4">
         <SummaryRow label="Total Income" tone="income" value={income} />
         <SummaryRow label="Total Expense" tone="expense" value={expense} />

@@ -106,6 +106,15 @@ export type LoginResponse = {
   token: string;
 };
 
+export type UpdateProfilePayload = {
+  name: string;
+};
+
+export type ChangePasswordPayload = {
+  current_password: string;
+  new_password: string;
+};
+
 export type CategoryPayload = {
   name: string;
   type: CategoryType;
@@ -225,6 +234,28 @@ export async function getMe(): Promise<User> {
   const response = await apiRequest<ApiSuccessResponse<User>>("/me");
 
   return response.data;
+}
+
+export async function updateProfile(payload: UpdateProfilePayload): Promise<User> {
+  const response = await apiRequest<ApiSuccessResponse<User>>("/me", {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+
+  return response.data;
+}
+
+export async function changePassword(payload: ChangePasswordPayload): Promise<void> {
+  await apiRequest<ApiSuccessResponse<null>>("/me/password", {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function resetUserData(): Promise<void> {
+  await apiRequest<ApiSuccessResponse<null>>("/me/reset-data", {
+    method: "POST",
+  });
 }
 
 export async function getDashboardSummary(): Promise<DashboardSummary> {

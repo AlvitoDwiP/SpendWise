@@ -49,7 +49,10 @@ export function BalanceHeroCard({
         ) : null}
 
         <p className="text-center text-xs font-medium tracking-wide text-white/55 md:text-left md:text-sm md:tracking-normal">
-          Current Balance
+          All-Time Balance
+        </p>
+        <p className="mt-1 text-center text-[11px] text-white/45 md:text-left md:text-xs">
+          Across all transactions
         </p>
         <p
           className={`mt-2.5 max-w-full break-words text-center text-[clamp(1.65rem,7.2vw,2.2rem)] font-semibold leading-[1.03] tracking-tight sm:text-5xl md:text-left md:text-6xl ${balanceTone}`}
@@ -61,15 +64,15 @@ export function BalanceHeroCard({
           <span className="font-semibold text-emerald-400">
             +{formatRupiah(monthlyIncome)}
           </span>
+          <span className="text-white/50 md:hidden">Month income</span>
+          <span className="hidden text-white/50 md:inline">This month income</span>
           <span className="h-3.5 w-px bg-white/10" />
           <span>
-            <span className="font-semibold text-purple-300">
-              {transactionCount}
-            </span>{" "}
-            Transactions
+            <span className="font-semibold text-purple-300">{transactionCount}</span>{" "}
+            <span className="md:hidden">Month txns</span>
+            <span className="hidden md:inline">This month transactions</span>
           </span>
         </div>
-
       </div>
     </motion.section>
   );
