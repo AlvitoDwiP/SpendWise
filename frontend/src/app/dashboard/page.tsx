@@ -226,7 +226,7 @@ export default function DashboardPage() {
   const { recentTransactions, summary, user } = dashboard;
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-[#0f0f10] text-white">
+    <main className="relative min-h-screen w-full max-w-full overflow-x-clip bg-[#0f0f10] text-white">
       <DashboardBackground />
 
       <motion.div
@@ -251,7 +251,7 @@ export default function DashboardPage() {
         </AnimatePresence>
 
         {/* Main Content */}
-        <div className="relative mx-auto w-full flex-1 px-5 pb-28 pt-5 md:px-8 md:pb-12 md:pt-0">
+        <div className="relative mx-auto w-full max-w-full flex-1 px-4 pb-[calc(env(safe-area-inset-bottom)+6.6rem)] pt-2.5 md:px-8 md:pb-12 md:pt-0">
           <DashboardNavbar
             dateLabel={dateLabel}
             greeting={greeting}
@@ -269,13 +269,13 @@ export default function DashboardPage() {
           />
 
           <motion.div
-            className="grid gap-7 lg:grid-cols-[minmax(0,1.42fr)_minmax(330px,0.78fr)]"
+            className="grid min-w-0 gap-4 md:gap-7 lg:grid-cols-[minmax(0,1.42fr)_minmax(330px,0.78fr)]"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, ease: "easeOut" }}
             layout
           >
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-4 md:space-y-6">
             <BalanceHeroCard
               balance={summary.current_balance}
               greeting={greeting}
@@ -307,7 +307,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="hidden space-y-6 md:block">
+          <div className="hidden min-w-0 space-y-6 md:block">
             <ThisMonthSummaryCard
               expense={summary.this_month_expense}
               income={summary.this_month_income}

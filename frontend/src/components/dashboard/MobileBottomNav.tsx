@@ -42,6 +42,7 @@ type MobileMoreMenuProps = {
 
 type MobileMoreMenuItemProps = {
   item: MoreMenuItem;
+  isActive: boolean;
   onClose: () => void;
   onLogout: () => void;
 };
@@ -117,11 +118,11 @@ export function MobileBottomNav({
 
       <nav
         aria-label="Mobile navigation"
-        className="fixed bottom-[calc(env(safe-area-inset-bottom)+1.25rem)] left-4 right-4 z-40 h-[76px] rounded-3xl border border-white/10 bg-white/5 shadow-[0_24px_70px_rgba(0,0,0,0.45)] backdrop-blur-xl md:hidden"
+        className="fixed bottom-[calc(env(safe-area-inset-bottom)+0.55rem)] left-4 right-4 z-40 h-[62px] w-auto max-w-[calc(100vw-2rem)] rounded-3xl border border-white/10 bg-white/5 shadow-[0_24px_70px_rgba(0,0,0,0.45)] backdrop-blur-xl md:hidden"
       >
-        <div className="grid h-full grid-cols-[minmax(0,1fr)_88px_minmax(0,1fr)] items-center px-4">
+        <div className="grid h-full grid-cols-[minmax(0,1fr)_72px_minmax(0,1fr)] items-center px-2.5">
           <MobileNavButton
-            active={pathname === "/dashboard"}
+            active={pathname === "/dashboard" || pathname.startsWith("/dashboard/")}
             href="/dashboard"
             icon={Home}
             label="Home"
@@ -132,7 +133,7 @@ export function MobileBottomNav({
 
           <div className="grid h-full grid-cols-2 items-center">
             <MobileNavButton
-              active={pathname === "/report"}
+              active={pathname === "/report" || pathname.startsWith("/report/")}
               href="/report"
               icon={BarChart3}
               label="Report"
@@ -153,7 +154,7 @@ export function MobileBottomNav({
                 aria-expanded={isMoreOpen}
                 aria-haspopup="menu"
                 aria-label="More navigation options"
-                className={`flex h-full min-w-0 flex-col items-center justify-center gap-1 text-center transition ${
+                className={`flex h-full min-w-0 flex-col items-center justify-center gap-0.5 text-center transition ${
                   isMoreOpen
                     ? "text-purple-300"
                     : "text-white/45 hover:text-white/70"
@@ -162,8 +163,8 @@ export function MobileBottomNav({
                 type="button"
                 whileTap={{ scale: 0.94 }}
               >
-                <MoreHorizontal className="h-6 w-6" />
-                <span className="text-xs font-medium">More</span>
+                <MoreHorizontal className="h-5 w-5" />
+                <span className="text-[11px] font-medium">More</span>
               </motion.button>
             </div>
           </div>
@@ -172,7 +173,7 @@ export function MobileBottomNav({
         <div className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2">
           <motion.button
             aria-label="Add transaction"
-            className="grid h-16 w-16 place-items-center rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 text-white shadow-lg shadow-purple-500/30 ring-8 ring-purple-500/10"
+            className="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 text-white shadow-lg shadow-purple-500/30 ring-8 ring-purple-500/10"
             onClick={() => {
               closeMoreMenu();
               onAddTransaction();
@@ -181,7 +182,7 @@ export function MobileBottomNav({
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.94 }}
           >
-            <Plus className="h-9 w-9" />
+            <Plus className="h-6 w-6" />
           </motion.button>
         </div>
       </nav>
@@ -196,7 +197,7 @@ function MobileNavButton({
   label,
   onClick,
 }: MobileNavButtonProps) {
-  const className = `flex h-full min-w-0 flex-col items-center justify-center gap-1 text-center transition ${
+  const className = `flex h-full min-w-0 flex-col items-center justify-center gap-0.5 text-center transition ${
     active ? "text-purple-300" : "text-white/45 hover:text-white/70"
   }`;
 
@@ -208,8 +209,8 @@ function MobileNavButton({
         href={href}
         onClick={onClick}
       >
-        <Icon className="h-6 w-6" />
-        <span className="text-xs font-medium">{label}</span>
+        <Icon className="h-5 w-5" />
+        <span className="text-[11px] font-medium">{label}</span>
       </Link>
     );
   }
@@ -221,16 +222,18 @@ function MobileNavButton({
       onClick={onClick}
       type="button"
     >
-      <Icon className="h-6 w-6" />
-      <span className="text-xs font-medium">{label}</span>
+      <Icon className="h-5 w-5" />
+      <span className="text-[11px] font-medium">{label}</span>
     </button>
   );
 }
 
 function MobileMoreMenu({ onClose, onLogout }: MobileMoreMenuProps) {
+  const pathname = usePathname();
+
   return (
     <motion.div
-      className="absolute bottom-[calc(100%+1rem)] right-0 flex origin-bottom-right flex-col items-end gap-3"
+      className="absolute bottom-[calc(100%+0.9rem)] right-0 z-50 flex origin-bottom-right flex-col items-end gap-2.5"
       initial="hidden"
       animate="visible"
       exit="hidden"
@@ -239,6 +242,11 @@ function MobileMoreMenu({ onClose, onLogout }: MobileMoreMenuProps) {
     >
       {moreMenuItems.map((item) => (
         <MobileMoreMenuItem
+          isActive={
+            item.href
+              ? pathname === item.href || pathname.startsWith(`${item.href}/`)
+              : false
+          }
           item={item}
           key={item.label}
           onClose={onClose}
@@ -251,15 +259,18 @@ function MobileMoreMenu({ onClose, onLogout }: MobileMoreMenuProps) {
 
 function MobileMoreMenuItem({
   item,
+  isActive,
   onClose,
   onLogout,
 }: MobileMoreMenuItemProps) {
   const Icon = item.icon;
   const isDanger = item.tone === "danger";
-  const itemClassName = `flex h-12 min-w-[136px] items-center gap-3 rounded-2xl border border-white/10 bg-[#1c1c1e]/95 px-4 text-sm font-medium shadow-[0_18px_45px_rgba(0,0,0,0.32)] backdrop-blur-xl transition ${
+  const itemClassName = `flex h-12 min-w-[140px] items-center gap-3 rounded-2xl border border-white/10 px-4 text-sm font-medium shadow-[0_18px_45px_rgba(0,0,0,0.32)] backdrop-blur-xl transition ${
     isDanger
       ? "text-red-300 hover:bg-red-500/10"
-      : "text-white/80 hover:bg-white/10 hover:text-white"
+      : isActive
+        ? "bg-purple-500/20 text-purple-200"
+        : "bg-[#1c1c1e]/95 text-white/80 hover:bg-white/10 hover:text-white"
   }`;
   const iconClassName = `grid h-8 w-8 place-items-center rounded-full ${
     isDanger ? "bg-red-500/10 text-red-300" : "bg-purple-500/15 text-purple-300"

@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+const API_BASE_URL = resolveApiBaseUrl();
 const TOKEN_STORAGE_KEY = "spendwise_token";
 
 type ApiSuccessResponse<T> = {
@@ -13,6 +13,26 @@ type ApiErrorResponse = {
 };
 
 type QueryParams = Record<string, string | number | boolean | null | undefined>;
+
+function resolveApiBaseUrl(): string {
+  const configured = process.env.NEXT_PUBLIC_API_URL?.trim();
+  if (configured) {
+    return configured;
+  }
+
+  if (typeof window !== "undefined") {
+    const hostname = window.location.hostname;
+    const protocol = window.location.protocol;
+
+    if (hostname.endsWith(".devtunnels.ms")) {
+      // Default devtunnel convention: frontend on *-3000, backend on *-8080.
+      const backendHost = hostname.replace(/-3000(\.|$)/, "-8080$1");
+      return `${protocol}//${backendHost}`;
+    }
+  }
+
+  return "http://localhost:8080";
+}
 
 export type User = {
   id: number;
