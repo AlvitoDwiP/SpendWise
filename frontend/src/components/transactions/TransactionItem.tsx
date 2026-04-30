@@ -1,49 +1,53 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { Transaction, Category } from "../../lib/api";
+import { formatDate, formatRupiah } from "../../lib/format";
 
 interface TransactionItemProps {
   transaction: Transaction;
   category: Category | null;
-  onDelete: (id: number) => void;
+  onDelete: (transaction: Transaction) => void;
+  onEdit: (transaction: Transaction) => void;
 }
 
 export function TransactionItem({
   transaction,
   category,
+  onEdit,
   onDelete,
 }: TransactionItemProps) {
   const isIncome = transaction.type === "income";
   const amountColor = isIncome ? "text-green-400" : "text-red-400";
-  const categoryBgColor = category
-    ? category.color || "bg-slate-700"
-    : "bg-slate-700";
-
-  const formattedAmount = isIncome
-    ? `+${transaction.amount.toLocaleString()}`
-    : `-${transaction.amount.toLocaleString()}`;
-
-  const date = new Date(transaction.transaction_date);
-  const dateStr = date.toLocaleDateString("id-ID", {
-    month: "short",
-    day: "numeric",
-  });
+  const safeCategoryName = category?.name ?? transaction.category?.name ?? "Unknown";
+  const safeCategoryIcon = category?.icon ?? transaction.category?.icon ?? "💰";
 
   return (
-    <div className="flex items-center gap-3 rounded-xl bg-white/5 p-4 backdrop-blur-sm transition-all hover:bg-white/10">
+    <div
+      className="flex items-center gap-3 rounded-xl bg-white/5 p-4 backdrop-blur-sm transition-all hover:bg-white/10"
+      onClick={() => onEdit(transaction)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onEdit(transaction);
+        }
+      }}
+    >
       {/* Category Icon */}
       <div
-        className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg ${categoryBgColor} text-lg`}
+        className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-slate-700 text-lg"
+        style={category?.color ? { backgroundColor: category.color } : undefined}
       >
-        {category?.icon || "💰"}
+        {safeCategoryIcon}
       </div>
 
       {/* Transaction Details */}
       <div className="flex-1 min-w-0">
         <p className="font-medium text-white truncate">{transaction.title}</p>
-        <p className="text-sm text-slate-400">
-          {category?.name || "Unknown"}
+        <p className="truncate text-sm text-slate-400">
+          {safeCategoryName}
           {transaction.note && ` • ${transaction.note}`}
         </p>
       </div>
@@ -51,19 +55,36 @@ export function TransactionItem({
       {/* Date */}
       <div className="flex flex-shrink-0 flex-col items-end gap-1">
         <p className={`text-lg font-semibold ${amountColor}`}>
-          {formattedAmount}
+          {isIncome ? "+" : "-"}
+          {formatRupiah(transaction.amount)}
         </p>
-        <p className="text-xs text-slate-500">{dateStr}</p>
+        <p className="text-xs text-slate-500">{formatDate(transaction.transaction_date)}</p>
       </div>
 
-      {/* Delete Button */}
-      <button
-        onClick={() => onDelete(transaction.id)}
-        className="ml-2 flex-shrink-0 rounded-lg p-2 text-slate-400 transition-colors hover:bg-red-500/20 hover:text-red-400"
-        title="Delete transaction"
-      >
-        <Trash2 size={16} />
-      </button>
+      <div className="ml-2 flex flex-shrink-0 items-center gap-1">
+        <button
+          className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-white/10 hover:text-white"
+          onClick={(event) => {
+            event.stopPropagation();
+            onEdit(transaction);
+          }}
+          title="Edit transaction"
+          type="button"
+        >
+          <Pencil size={16} />
+        </button>
+        <button
+          className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-red-500/20 hover:text-red-400"
+          onClick={(event) => {
+            event.stopPropagation();
+            onDelete(transaction);
+          }}
+          title="Delete transaction"
+          type="button"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
     </div>
   );
 }

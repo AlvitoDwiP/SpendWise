@@ -28,11 +28,12 @@ type AddTransactionModalProps = {
 type ModalMode = "manual" | "scan";
 
 type ScanSuggestion = {
-  amount: number;
+  type: CategoryType;
+  amount: number | null;
   categoryId: string;
   date: Date;
   note: string;
-  type: CategoryType;
+  confidence?: number;
   warning?: string;
 };
 
@@ -43,10 +44,7 @@ const scannedHighlightFields: TransactionField[] = [
   "note",
 ];
 
-export function AddTransactionModal({
-  onClose,
-  onCreated,
-}: AddTransactionModalProps) {
+export function AddTransactionModal({ onClose, onCreated }: AddTransactionModalProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesError, setCategoriesError] = useState("");
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
@@ -72,19 +70,16 @@ export function AddTransactionModal({
     async function loadCategories() {
       setIsLoadingCategories(true);
       setCategoriesError("");
-
       try {
         const loaded = await getCategories();
         if (!isMounted) {
           return;
         }
-
         setCategories(loaded);
       } catch (err) {
         if (!isMounted) {
           return;
         }
-
         setCategoriesError(
           err instanceof Error ? err.message : "Failed to load categories.",
         );
@@ -96,7 +91,6 @@ export function AddTransactionModal({
     }
 
     loadCategories();
-
     return () => {
       isMounted = false;
     };
@@ -136,8 +130,7 @@ export function AddTransactionModal({
     setIsScanning(true);
 
     try {
-      const suggestion = await mockScanReceipt(scanFile, expenseCategories);
-
+      const suggestion = await scanReceipt(scanFile, expenseCategories);
       setFormValues((current) => ({
         ...current,
         amount: suggestion.amount,
@@ -148,11 +141,11 @@ export function AddTransactionModal({
       }));
       setMode("manual");
       setScanSuggestionNotice(
-        suggestion.warning ||
-          "Hasil scan hanya suggestion. Cek kembali sebelum menyimpan.",
+        suggestion.warning ??
+          "Receipt uploaded. OCR backend belum tersedia. Isi nominal secara manual sebelum menyimpan.",
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to scan receipt.");
+      setError(err instanceof Error ? err.message : "Failed to prepare suggestion.");
     } finally {
       setIsScanning(false);
     }
@@ -165,7 +158,11 @@ export function AddTransactionModal({
       setError("Transaction type is required.");
       return;
     }
-    if (!Number.isFinite(formValues.amount) || formValues.amount === null || formValues.amount <= 0) {
+    if (
+      !Number.isFinite(formValues.amount) ||
+      formValues.amount === null ||
+      formValues.amount <= 0
+    ) {
       setError("Amount harus diisi lebih dari 0 sebelum disimpan.");
       return;
     }
@@ -178,9 +175,7 @@ export function AddTransactionModal({
       return;
     }
 
-    const category = categories.find(
-      (item) => item.id === Number(formValues.categoryId),
-    );
+    const category = categories.find((item) => item.id === Number(formValues.categoryId));
 
     const payload: TransactionPayload = {
       amount: formValues.amount,
@@ -199,9 +194,7 @@ export function AddTransactionModal({
       onCreated(created);
       onClose();
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to create transaction.",
-      );
+      setError(err instanceof Error ? err.message : "Failed to create transaction.");
     } finally {
       setIsSubmitting(false);
     }
@@ -238,7 +231,7 @@ export function AddTransactionModal({
           <div>
             <p className="text-lg font-semibold">Add Transaction</p>
             <p className="mt-1 text-sm leading-6 text-white/55">
-              Add manually or scan receipt to get editable suggestions.
+              Add manually or use receipt-assisted input before saving.
             </p>
           </div>
           <button
@@ -276,7 +269,7 @@ export function AddTransactionModal({
             type="button"
           >
             <Receipt className="h-4 w-4" />
-            Scan Receipt
+            Receipt Assist
           </button>
         </div>
 
@@ -304,7 +297,9 @@ export function AddTransactionModal({
               categories={categories}
               disabled={isSubmitting || isLoadingCategories || !!categoriesError}
               helperText={
-                scanSuggestionNotice ? "Auto-filled from scan. Review before saving." : undefined
+                scanSuggestionNotice
+                  ? "Review suggestion and complete required fields before saving."
+                  : undefined
               }
               highlightedFields={scanSuggestionNotice ? scannedHighlightFields : []}
               onChange={setFormValues}
@@ -367,7 +362,7 @@ function defaultFormValues(): TransactionFormValues {
     categoryId: "",
     date: new Date(),
     note: "",
-    type: "",
+    type: "expense",
   };
 }
 
@@ -375,7 +370,6 @@ function buildTransactionTitle(type: CategoryType, categoryName?: string): strin
   if (categoryName) {
     return `${type === "income" ? "Income" : "Expense"} - ${categoryName}`;
   }
-
   return type === "income" ? "Income Transaction" : "Expense Transaction";
 }
 
@@ -401,26 +395,28 @@ function pickBestExpenseCategory(expenseCategories: Category[]): Category | null
   return expenseCategories[0];
 }
 
-async function mockScanReceipt(
+async function scanReceipt(
   file: File,
   expenseCategories: Category[],
 ): Promise<ScanSuggestion> {
   await new Promise((resolve) => setTimeout(resolve, 800));
 
   if (file.name.toLowerCase().includes("fail")) {
-    throw new Error("Scan failed. Please try another image.");
+    throw new Error("Receipt upload failed. Please try another image.");
   }
 
   const preferredCategory = pickBestExpenseCategory(expenseCategories);
 
+  // TODO: Replace with OCR backend call when endpoint is available.
   return {
-    amount: 125000,
+    amount: null,
     categoryId: preferredCategory ? String(preferredCategory.id) : "",
     date: parseTransactionDate(new Date().toISOString().slice(0, 10)) ?? new Date(),
-    note: "Scanned receipt",
+    note: "",
     type: "expense",
+    confidence: 0,
     warning: preferredCategory
-      ? undefined
-      : "Hasil scan hanya suggestion. Category expense belum tersedia, pilih category dulu sebelum menyimpan.",
+      ? "Receipt uploaded. OCR backend belum tersedia. Isi nominal secara manual sebelum menyimpan."
+      : "Receipt uploaded. OCR backend belum tersedia dan category expense belum ada. Pilih category secara manual.",
   };
 }

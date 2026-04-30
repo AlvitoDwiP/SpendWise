@@ -3,6 +3,7 @@
 import DatePicker from "react-datepicker";
 
 import type { Category, CategoryType } from "../../lib/api";
+import { formatRupiahNumber, parseRupiahInput } from "../../lib/format";
 import { isValidDate } from "./dateUtils";
 
 export type TransactionField = "amount" | "categoryId" | "date" | "note";
@@ -83,19 +84,22 @@ export function TransactionForm({
         <input
           className={`w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-purple-400/50 focus:ring-2 focus:ring-purple-400/25 disabled:cursor-not-allowed disabled:opacity-60 ${highlighted.has("amount") ? highlightClass : ""}`}
           disabled={disabled}
-          inputMode="decimal"
+          inputMode="numeric"
           min="0"
           onChange={(event) => {
             const nextValue = event.target.value;
             onChange({
               ...effectiveValues,
-              amount: nextValue === "" ? null : Number(nextValue),
+              amount: parseRupiahInput(nextValue),
             });
           }}
           placeholder="0"
-          step="0.01"
-          type="number"
-          value={effectiveValues.amount ?? ""}
+          type="text"
+          value={
+            effectiveValues.amount === null
+              ? ""
+              : formatRupiahNumber(effectiveValues.amount)
+          }
         />
       </label>
 

@@ -8,6 +8,26 @@ export function formatRupiah(value: number): string {
     .replace(/\s/g, " ");
 }
 
+export function formatRupiahNumber(value: number): string {
+  return new Intl.NumberFormat("id-ID", {
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+export function parseRupiahInput(value: string): number | null {
+  const digitsOnly = value.replace(/[^\d]/g, "");
+  if (!digitsOnly) {
+    return null;
+  }
+
+  const parsed = Number(digitsOnly);
+  if (!Number.isFinite(parsed)) {
+    return null;
+  }
+
+  return parsed;
+}
+
 export function formatDate(value: string): string {
   return new Intl.DateTimeFormat("id-ID", {
     day: "numeric",
