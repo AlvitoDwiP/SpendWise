@@ -34,13 +34,13 @@ export function SpendingOverviewCard({
   const maxValue = Math.max(...values, 1);
 
   return (
-    <section className="min-h-[320px] rounded-2xl border border-white/10 bg-white/5 p-4 shadow-2xl shadow-black/20 backdrop-blur-xl sm:min-h-[360px] sm:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+    <section className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-2xl shadow-black/20 backdrop-blur-xl sm:min-h-[360px] sm:p-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <h2 className="text-xl font-semibold text-white">Spending Overview</h2>
         <div className="flex rounded-full bg-white/5 p-1 text-xs text-white/50">
           {modes.map((item) => (
             <button
-              className={`rounded-full px-3 py-1.5 transition ${
+              className={`h-11 rounded-full px-3.5 transition ${
                 item.key === mode ? "bg-white/10 text-white" : "hover:text-white"
               }`}
               key={item.key}
@@ -53,15 +53,15 @@ export function SpendingOverviewCard({
         </div>
       </div>
 
-      <div className="mt-7 grid grid-cols-[2.5rem_1fr] gap-3 sm:grid-cols-[2.75rem_1fr] sm:gap-4">
-        <div className="flex h-44 flex-col justify-between text-xs text-white/35 sm:h-56">
+      <div className="mt-5 grid grid-cols-[2.1rem_1fr] gap-2.5 pb-2 sm:mt-7 sm:grid-cols-[2.75rem_1fr] sm:gap-4">
+        <div className="flex h-40 flex-col justify-between text-[11px] text-white/35 sm:h-56 sm:text-xs">
           <span>{formatCompactRupiah(maxValue)}</span>
           <span>{formatCompactRupiah(Math.round(maxValue * 0.66))}</span>
           <span>{formatCompactRupiah(Math.round(maxValue * 0.33))}</span>
           <span>0</span>
         </div>
 
-        <div className="relative flex h-44 items-end justify-between gap-2 border-b border-white/10 sm:h-56 sm:gap-3">
+        <div className="relative flex h-40 items-end justify-between gap-1.5 border-b border-white/10 pb-8 sm:h-56 sm:gap-3 sm:pb-0">
           <div className="absolute inset-x-0 bottom-1/3 border-t border-white/[0.05]" />
           <div className="absolute inset-x-0 bottom-2/3 border-t border-white/[0.05]" />
           {chart.map((item, index) => {
@@ -74,7 +74,7 @@ export function SpendingOverviewCard({
                 key={item.key}
               >
                 <motion.div
-                  className={`w-full max-w-10 origin-bottom rounded-t-xl ${
+                  className={`w-full max-w-6 origin-bottom rounded-t-lg sm:max-w-10 sm:rounded-t-xl ${
                     item.value > 0
                       ? isActiveMonth
                         ? "bg-gradient-to-t from-emerald-500 to-green-300 shadow-lg shadow-emerald-500/20"
@@ -86,7 +86,7 @@ export function SpendingOverviewCard({
                   transition={{ delay: 0.05 + index * 0.03, duration: 0.32 }}
                   style={{ height: `${height}%` }}
                 />
-                <span className={`absolute -bottom-7 text-[11px] sm:text-xs ${isActiveMonth ? "font-semibold text-emerald-300" : "text-white/35"}`}>
+                <span className={`absolute bottom-1 text-[10px] sm:-bottom-7 sm:text-xs ${isActiveMonth ? "font-semibold text-white" : "text-white/70"}`}>
                   {item.label}
                 </span>
               </div>

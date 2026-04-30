@@ -66,7 +66,7 @@ function TransactionItem({
 
   return (
     <motion.article
-      className="group flex items-center justify-between gap-3 rounded-xl p-3 transition hover:bg-white/5"
+      className="group flex items-center justify-between gap-3 rounded-xl p-4 transition hover:bg-white/5"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       onClick={() => onEditTransaction(transaction)}
@@ -104,7 +104,7 @@ function TransactionItem({
         <p className="mt-1 text-xs text-white/35">{formatDate(transaction.transaction_date)}</p>
         <div className="mt-2 flex items-center justify-end gap-1">
           <button
-            className="grid h-7 w-7 place-items-center rounded-lg border border-white/10 bg-white/5 text-white/60 transition hover:bg-white/10 hover:text-white"
+            className="grid h-11 w-11 place-items-center rounded-lg border border-white/10 bg-white/5 text-white/60 transition hover:bg-white/10 hover:text-white"
             onClick={(event) => {
               event.stopPropagation();
               onEditTransaction(transaction);
@@ -114,7 +114,7 @@ function TransactionItem({
             <Pencil className="h-3.5 w-3.5" />
           </button>
           <button
-            className="grid h-7 w-7 place-items-center rounded-lg border border-red-500/30 bg-red-500/10 text-red-300 transition hover:bg-red-500/20"
+            className="grid h-11 w-11 place-items-center rounded-lg border border-red-500/30 bg-red-500/10 text-red-300 transition hover:bg-red-500/20"
             onClick={(event) => {
               event.stopPropagation();
               onDeleteTransaction(transaction);

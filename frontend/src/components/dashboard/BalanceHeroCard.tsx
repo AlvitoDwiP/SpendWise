@@ -7,14 +7,12 @@ import { formatRupiah } from "../../lib/format";
 type BalanceHeroCardProps = {
   balance: number;
   greeting?: string;
-  transactionCount: number;
   userName?: string;
 };
 
 export function BalanceHeroCard({
   balance,
   greeting,
-  transactionCount,
   userName,
 }: BalanceHeroCardProps) {
   const balanceTone = balance < 0 ? "text-red-400" : "text-white";
@@ -55,13 +53,6 @@ export function BalanceHeroCard({
           {formatRupiah(balance)}
         </p>
 
-        <div className="mx-auto mt-3 flex w-fit max-w-full flex-wrap items-center gap-x-2 gap-y-1 rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 text-[10px] text-white/65 sm:text-sm md:mx-0">
-          <span>
-            <span className="font-semibold text-purple-300">{transactionCount}</span>{" "}
-            <span className="md:hidden">Month txns</span>
-            <span className="hidden md:inline">This month transactions</span>
-          </span>
-        </div>
       </div>
     </motion.section>
   );

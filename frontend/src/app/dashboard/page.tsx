@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import { CalendarDays, ChevronDown } from "lucide-react";
 
 import { BalanceHeroCard } from "../../components/dashboard/BalanceHeroCard";
 import { BalanceStatsCards } from "../../components/dashboard/BalanceStatsCards";
@@ -15,7 +16,6 @@ import {
   DashboardErrorState,
   DashboardLoadingState,
 } from "../../components/dashboard/DashboardStates";
-import { MobileBalancePanel } from "../../components/dashboard/MobileBalancePanel";
 import { MobileBottomNav } from "../../components/dashboard/MobileBottomNav";
 import { RecentTransactionsCard } from "../../components/dashboard/RecentTransactionsCard";
 import { SpendingOverviewCard } from "../../components/dashboard/SpendingOverviewCard";
@@ -348,6 +348,25 @@ export default function DashboardPage() {
             selectedMonthKey={effectiveSelectedMonthKey}
             userName={user.name}
           />
+          <div className="mb-4 flex items-center justify-end md:hidden">
+            <div className="relative inline-flex w-fit items-center">
+              <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/60" />
+              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/50" />
+              <select
+                className="h-10 w-fit appearance-none rounded-lg border border-white/10 bg-white/5 pl-9 pr-8 text-sm font-medium text-white/80 outline-none backdrop-blur-md"
+                onChange={(event) => setSelectedMonthKey(event.target.value)}
+                value={effectiveSelectedMonthKey}
+              >
+                {monthOptions.map((option) => (
+                  <option className="bg-[#1c1c1e] text-white" key={option.key} value={option.key}>
+                    {new Intl.DateTimeFormat("en", { month: "short", year: "numeric" }).format(
+                      new Date(option.year, option.month, 1),
+                    )}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
           <motion.div
             className="grid min-w-0 gap-4 md:gap-7 lg:grid-cols-[minmax(0,1.42fr)_minmax(330px,0.78fr)]"
@@ -360,33 +379,37 @@ export default function DashboardPage() {
               <BalanceHeroCard
                 balance={summary.current_balance}
                 greeting={greeting}
-                transactionCount={kpi.transactions}
                 userName={user.name}
               />
-              <MobileBalancePanel
+              <BalanceStatsCards
                 expense={kpi.expense}
                 income={kpi.income}
-                onDeleteTransaction={(transaction) => {
-                  setDeleteTransactionError("");
-                  setDeletingTransaction(transaction);
-                }}
-                onEditTransaction={(transaction) => setEditingTransaction(transaction)}
-                transactions={recentTransactions}
+                monthLabel={selectedMonth.label}
+                transactionCount={kpi.transactions}
               />
-              <div className="hidden md:block">
-                <BalanceStatsCards
-                  expense={kpi.expense}
-                  income={kpi.income}
-                  monthLabel={selectedMonth.label}
-                  transactionCount={kpi.transactions}
+              <div className="md:hidden">
+                <RecentTransactionsCard
+                  onDeleteTransaction={(transaction) => {
+                    setDeleteTransactionError("");
+                    setDeletingTransaction(transaction);
+                  }}
+                  onEditTransaction={(transaction) => setEditingTransaction(transaction)}
+                  transactions={recentTransactions}
                 />
               </div>
-              <div className="hidden md:block">
-                <SpendingOverviewCard
-                  activeMonthKey={selectedMonth.key}
-                  transactions={dashboard.allTransactions}
+              <div className="md:hidden">
+                <ThisMonthSummaryCard
+                  activeMonthExpense={kpi.expense}
+                  net={kpi.income - kpi.expense}
+                  totalExpenseAllTime={rollingExpense.allTimeExpense}
+                  totalExpenseLast28Days={rollingExpense.last28Days}
+                  totalExpenseLast7Days={rollingExpense.last7Days}
                 />
               </div>
+              <SpendingOverviewCard
+                activeMonthKey={selectedMonth.key}
+                transactions={dashboard.allTransactions}
+              />
             </div>
 
             <div className="hidden min-w-0 space-y-6 md:block">
