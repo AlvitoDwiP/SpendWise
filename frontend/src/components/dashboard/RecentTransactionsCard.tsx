@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, Trash2, ArrowDownLeft, ArrowUpRight, WalletCards } from "lucide-react";
+import { Pencil, Trash2, ArrowDownLeft, ArrowUpRight, Wallet } from "lucide-react";
 import { motion } from "framer-motion";
 
 import type { Transaction } from "../../lib/api";
@@ -60,7 +60,9 @@ function TransactionItem({
 }) {
   const isExpense = transaction.type === "expense";
   const AmountIcon = isExpense ? ArrowUpRight : ArrowDownLeft;
-  const categoryName = transaction.category?.name ?? transaction.type;
+  const RowIcon = isExpense ? ArrowUpRight : Wallet;
+  const topText = transaction.note?.trim() || transaction.title;
+  const categoryName = transaction.category?.name ?? "Uncategorized";
 
   return (
     <motion.article
@@ -78,27 +80,12 @@ function TransactionItem({
               : "bg-emerald-500/10 text-emerald-300"
           }`}
         >
-          {transaction.category?.icon ? (
-            <span aria-hidden className="text-lg">
-              {transaction.category.icon}
-            </span>
-          ) : (
-            <WalletCards className="h-5 w-5" />
-          )}
+          <RowIcon className="h-5 w-5" />
         </div>
 
         <div className="min-w-0">
-          <p className="truncate font-medium text-white">{transaction.title}</p>
-          <div className="mt-1 flex min-w-0 flex-wrap items-center gap-2">
-            <span className="rounded-md bg-white/5 px-2 py-1 text-xs text-white/55">
-              {categoryName}
-            </span>
-            {transaction.note ? (
-              <span className="max-w-28 truncate rounded-md bg-white/[0.04] px-2 py-1 text-xs text-white/40 sm:max-w-40">
-                {transaction.note}
-              </span>
-            ) : null}
-          </div>
+          <p className="truncate font-medium text-white">{topText}</p>
+          <p className="mt-1 truncate text-xs text-white/55">{categoryName}</p>
         </div>
       </div>
 
@@ -114,9 +101,7 @@ function TransactionItem({
             {formatRupiah(transaction.amount)}
           </span>
         </p>
-        <p className="mt-1 text-xs text-white/35">
-          {formatDate(transaction.transaction_date)}
-        </p>
+        <p className="mt-1 text-xs text-white/35">{formatDate(transaction.transaction_date)}</p>
         <div className="mt-2 flex items-center justify-end gap-1">
           <button
             className="grid h-7 w-7 place-items-center rounded-lg border border-white/10 bg-white/5 text-white/60 transition hover:bg-white/10 hover:text-white"

@@ -29,6 +29,7 @@ import {
   getMe,
   getRecentTransactions,
   getToken,
+  getTransactions,
   type DashboardSummary,
   type Transaction,
   type User,
@@ -36,9 +37,17 @@ import {
 import { logout } from "../../lib/auth";
 
 type DashboardState = {
+  allTransactions: Transaction[];
   user: User;
   summary: DashboardSummary;
   recentTransactions: Transaction[];
+};
+
+type MonthOption = {
+  key: string;
+  label: string;
+  month: number;
+  year: number;
 };
 
 export default function DashboardPage() {
@@ -53,6 +62,7 @@ export default function DashboardPage() {
   const [deleteTransactionError, setDeleteTransactionError] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedMonthKey, setSelectedMonthKey] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -67,14 +77,20 @@ export default function DashboardPage() {
       setError("");
 
       try {
-        const [user, summary, recentTransactions] = await Promise.all([
+        const [user, summary, recentTransactions, allTransactionsResponse] = await Promise.all([
           getMe(),
           getDashboardSummary(),
           getRecentTransactions(),
+          getTransactions({ limit: 500, offset: 0 }),
         ]);
 
         if (isMounted) {
-          setDashboard({ user, summary, recentTransactions });
+          setDashboard({
+            user,
+            summary,
+            recentTransactions,
+            allTransactions: sortByNewest(allTransactionsResponse.items),
+          });
         }
       } catch (err) {
         const message =
@@ -96,21 +112,128 @@ export default function DashboardPage() {
       }
     }
 
-    loadDashboard();
+    void loadDashboard();
 
     return () => {
       isMounted = false;
     };
   }, [router]);
 
-  const dateLabel = useMemo(() => getCurrentMonthLabel(), []);
   const greeting = useMemo(() => getGreeting(), []);
+
+  const monthOptions = useMemo<MonthOption[]>(() => {
+    const formatter = new Intl.DateTimeFormat("en", {
+      month: "long",
+      year: "numeric",
+    });
+    const options: MonthOption[] = [];
+    const seen = new Set<string>();
+    const now = new Date();
+
+    const nowKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    seen.add(nowKey);
+    options.push({
+      key: nowKey,
+      label: formatter.format(new Date(now.getFullYear(), now.getMonth(), 1)),
+      month: now.getMonth(),
+      year: now.getFullYear(),
+    });
+
+    (dashboard?.allTransactions ?? []).forEach((transaction) => {
+      const date = new Date(transaction.transaction_date);
+      if (Number.isNaN(date.getTime())) {
+        return;
+      }
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+      if (seen.has(key)) {
+        return;
+      }
+
+      seen.add(key);
+      options.push({
+        key,
+        label: formatter.format(new Date(date.getFullYear(), date.getMonth(), 1)),
+        month: date.getMonth(),
+        year: date.getFullYear(),
+      });
+    });
+
+    return options.sort((a, b) => (a.key > b.key ? -1 : 1));
+  }, [dashboard?.allTransactions]);
+
+  const effectiveSelectedMonthKey = selectedMonthKey || monthOptions[0]?.key || "";
+  const selectedMonth = useMemo(
+    () => monthOptions.find((option) => option.key === effectiveSelectedMonthKey) ?? null,
+    [effectiveSelectedMonthKey, monthOptions],
+  );
+
+  const monthTransactions = useMemo(() => {
+    if (!selectedMonth) {
+      return [] as Transaction[];
+    }
+
+    return (dashboard?.allTransactions ?? []).filter((transaction) => {
+      const date = new Date(transaction.transaction_date);
+      return (
+        date.getFullYear() === selectedMonth.year &&
+        date.getMonth() === selectedMonth.month
+      );
+    });
+  }, [dashboard?.allTransactions, selectedMonth]);
+
+  const kpi = useMemo(() => {
+    return monthTransactions.reduce(
+      (acc, transaction) => {
+        if (transaction.type === "income") {
+          acc.income += transaction.amount;
+        } else {
+          acc.expense += transaction.amount;
+        }
+        acc.transactions += 1;
+        return acc;
+      },
+      { income: 0, expense: 0, transactions: 0 },
+    );
+  }, [monthTransactions]);
+
+  const rollingExpense = useMemo(() => {
+    const all = dashboard?.allTransactions ?? [];
+    const now = new Date();
+    const start7 = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6, 0, 0, 0, 0);
+    const start28 = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 27, 0, 0, 0, 0);
+
+    let last7Days = 0;
+    let last28Days = 0;
+    let allTimeExpense = 0;
+
+    all.forEach((transaction) => {
+      if (transaction.type !== "expense") {
+        return;
+      }
+
+      const date = new Date(transaction.transaction_date);
+      allTimeExpense += transaction.amount;
+      if (date >= start28) {
+        last28Days += transaction.amount;
+      }
+      if (date >= start7) {
+        last7Days += transaction.amount;
+      }
+    });
+
+    return {
+      allTimeExpense,
+      last28Days,
+      last7Days,
+    };
+  }, [dashboard?.allTransactions]);
 
   async function refreshDashboardState() {
     try {
-      const [summary, recentTransactions] = await Promise.all([
+      const [summary, recentTransactions, allTransactionsResponse] = await Promise.all([
         getDashboardSummary(),
         getRecentTransactions(),
+        getTransactions({ limit: 500, offset: 0 }),
       ]);
       setDashboard((current) =>
         current
@@ -118,57 +241,13 @@ export default function DashboardPage() {
               ...current,
               recentTransactions,
               summary,
+              allTransactions: sortByNewest(allTransactionsResponse.items),
             }
           : current,
       );
     } catch {
       // Keep optimistic state if refresh fails.
     }
-  }
-
-  function patchTransactionSummary(
-    current: DashboardState,
-    previous: Transaction,
-    next: Transaction | null,
-  ): DashboardSummary {
-    const revertBalance =
-      previous.type === "income"
-        ? current.summary.current_balance - previous.amount
-        : current.summary.current_balance + previous.amount;
-    const revertedIncome =
-      previous.type === "income"
-        ? current.summary.this_month_income - previous.amount
-        : current.summary.this_month_income;
-    const revertedExpense =
-      previous.type === "expense"
-        ? current.summary.this_month_expense - previous.amount
-        : current.summary.this_month_expense;
-
-    if (!next) {
-      return {
-        ...current.summary,
-        current_balance: revertBalance,
-        this_month_income: revertedIncome,
-        this_month_expense: revertedExpense,
-        this_month_transaction_count: Math.max(
-          0,
-          current.summary.this_month_transaction_count - 1,
-        ),
-      };
-    }
-
-    return {
-      ...current.summary,
-      current_balance:
-        next.type === "income"
-          ? revertBalance + next.amount
-          : revertBalance - next.amount,
-      this_month_income:
-        next.type === "income" ? revertedIncome + next.amount : revertedIncome,
-      this_month_expense:
-        next.type === "expense" ? revertedExpense + next.amount : revertedExpense,
-      this_month_transaction_count: current.summary.this_month_transaction_count,
-    };
   }
 
   async function handleDeleteTransaction() {
@@ -190,7 +269,9 @@ export default function DashboardPage() {
           recentTransactions: current.recentTransactions.filter(
             (item) => item.id !== deletingTransaction.id,
           ),
-          summary: patchTransactionSummary(current, deletingTransaction, null),
+          allTransactions: current.allTransactions.filter(
+            (item) => item.id !== deletingTransaction.id,
+          ),
         };
       });
       setDeletingTransaction(null);
@@ -214,7 +295,7 @@ export default function DashboardPage() {
     return <DashboardLoadingState />;
   }
 
-  if (error || !dashboard) {
+  if (error || !dashboard || !selectedMonth) {
     return (
       <DashboardErrorState
         message={error || "Unable to load dashboard data."}
@@ -234,7 +315,6 @@ export default function DashboardPage() {
         layout
         transition={{ duration: 0.22, ease: "easeOut" }}
       >
-        {/* Desktop Sidebar */}
         <AnimatePresence mode="wait">
           {isSidebarOpen && (
             <motion.div
@@ -243,19 +323,18 @@ export default function DashboardPage() {
               exit={{ opacity: 0, x: -24, scale: 0.98 }}
               transition={{ duration: 0.22, ease: "easeOut" }}
               style={{ transformOrigin: "left center" }}
-              className="hidden md:block md:pt-0 md:pb-12 md:pl-8"
+              className="hidden md:block md:pb-12 md:pl-8 md:pt-0"
             >
               <DashboardSidebarCard onLogout={handleLogout} />
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Main Content */}
         <div className="relative mx-auto w-full max-w-full flex-1 px-4 pb-[calc(env(safe-area-inset-bottom)+6.6rem)] pt-2.5 md:px-8 md:pb-12 md:pt-0">
           <DashboardNavbar
-            dateLabel={dateLabel}
             greeting={greeting}
             isSidebarOpen={isSidebarOpen}
+            monthOptions={monthOptions.map((item) => ({ key: item.key, label: item.label }))}
             onAddTransaction={() => setIsAddTransactionOpen(true)}
             onMenuClick={() => {
               const mediaQuery = window.matchMedia("(min-width: 768px)");
@@ -265,6 +344,8 @@ export default function DashboardPage() {
                 setIsDrawerOpen(true);
               }
             }}
+            onMonthChange={setSelectedMonthKey}
+            selectedMonthKey={effectiveSelectedMonthKey}
             userName={user.name}
           />
 
@@ -275,54 +356,57 @@ export default function DashboardPage() {
             transition={{ duration: 0.35, ease: "easeOut" }}
             layout
           >
-          <div className="min-w-0 space-y-4 md:space-y-6">
-            <BalanceHeroCard
-              balance={summary.current_balance}
-              greeting={greeting}
-              monthlyIncome={summary.this_month_income}
-              transactionCount={summary.this_month_transaction_count}
-              userName={user.name}
-            />
-            <MobileBalancePanel
-              expense={summary.this_month_expense}
-              income={summary.this_month_income}
-              onDeleteTransaction={(transaction) => {
-                setDeleteTransactionError("");
-                setDeletingTransaction(transaction);
-              }}
-              onEditTransaction={(transaction) => setEditingTransaction(transaction)}
-              transactions={recentTransactions}
-            />
-            <div className="hidden md:block">
-              <BalanceStatsCards
-                expense={summary.this_month_expense}
-                income={summary.this_month_income}
+            <div className="min-w-0 space-y-4 md:space-y-6">
+              <BalanceHeroCard
+                balance={summary.current_balance}
+                greeting={greeting}
+                transactionCount={kpi.transactions}
+                userName={user.name}
               />
+              <MobileBalancePanel
+                expense={kpi.expense}
+                income={kpi.income}
+                onDeleteTransaction={(transaction) => {
+                  setDeleteTransactionError("");
+                  setDeletingTransaction(transaction);
+                }}
+                onEditTransaction={(transaction) => setEditingTransaction(transaction)}
+                transactions={recentTransactions}
+              />
+              <div className="hidden md:block">
+                <BalanceStatsCards
+                  expense={kpi.expense}
+                  income={kpi.income}
+                  monthLabel={selectedMonth.label}
+                  transactionCount={kpi.transactions}
+                />
+              </div>
+              <div className="hidden md:block">
+                <SpendingOverviewCard
+                  activeMonthKey={selectedMonth.key}
+                  transactions={dashboard.allTransactions}
+                />
+              </div>
             </div>
-            <div className="hidden md:block">
-              <SpendingOverviewCard
-                monthlyExpense={summary.this_month_expense}
+
+            <div className="hidden min-w-0 space-y-6 md:block">
+              <ThisMonthSummaryCard
+                activeMonthExpense={kpi.expense}
+                net={kpi.income - kpi.expense}
+                totalExpenseAllTime={rollingExpense.allTimeExpense}
+                totalExpenseLast28Days={rollingExpense.last28Days}
+                totalExpenseLast7Days={rollingExpense.last7Days}
+              />
+              <RecentTransactionsCard
+                onDeleteTransaction={(transaction) => {
+                  setDeleteTransactionError("");
+                  setDeletingTransaction(transaction);
+                }}
+                onEditTransaction={(transaction) => setEditingTransaction(transaction)}
                 transactions={recentTransactions}
               />
             </div>
-          </div>
-
-          <div className="hidden min-w-0 space-y-6 md:block">
-            <ThisMonthSummaryCard
-              expense={summary.this_month_expense}
-              income={summary.this_month_income}
-              transactionCount={summary.this_month_transaction_count}
-            />
-            <RecentTransactionsCard
-              onDeleteTransaction={(transaction) => {
-                setDeleteTransactionError("");
-                setDeletingTransaction(transaction);
-              }}
-              onEditTransaction={(transaction) => setEditingTransaction(transaction)}
-              transactions={recentTransactions}
-            />
-          </div>
-        </motion.div>
+          </motion.div>
         </div>
       </motion.div>
 
@@ -344,29 +428,10 @@ export default function DashboardPage() {
                 return current;
               }
 
-              const isIncome = createdTransaction.type === "income";
-              const amount = createdTransaction.amount;
-
               return {
                 ...current,
-                recentTransactions: [
-                  createdTransaction,
-                  ...current.recentTransactions,
-                ].slice(0, 8),
-                summary: {
-                  ...current.summary,
-                  current_balance: isIncome
-                    ? current.summary.current_balance + amount
-                    : current.summary.current_balance - amount,
-                  this_month_expense: isIncome
-                    ? current.summary.this_month_expense
-                    : current.summary.this_month_expense + amount,
-                  this_month_income: isIncome
-                    ? current.summary.this_month_income + amount
-                    : current.summary.this_month_income,
-                  this_month_transaction_count:
-                    current.summary.this_month_transaction_count + 1,
-                },
+                recentTransactions: [createdTransaction, ...current.recentTransactions].slice(0, 8),
+                allTransactions: sortByNewest([createdTransaction, ...current.allTransactions]),
               };
             });
             refreshDashboardState();
@@ -381,18 +446,18 @@ export default function DashboardPage() {
               if (!current) {
                 return current;
               }
-              const previous = current.recentTransactions.find(
-                (item) => item.id === updatedTransaction.id,
-              );
-              if (!previous) {
-                return current;
-              }
               return {
                 ...current,
-                recentTransactions: current.recentTransactions.map((item) =>
-                  item.id === updatedTransaction.id ? { ...item, ...updatedTransaction } : item,
+                recentTransactions: sortByNewest(
+                  current.recentTransactions.map((item) =>
+                    item.id === updatedTransaction.id ? { ...item, ...updatedTransaction } : item,
+                  ),
                 ),
-                summary: patchTransactionSummary(current, previous, updatedTransaction),
+                allTransactions: sortByNewest(
+                  current.allTransactions.map((item) =>
+                    item.id === updatedTransaction.id ? { ...item, ...updatedTransaction } : item,
+                  ),
+                ),
               };
             });
             setEditingTransaction(null);
@@ -419,11 +484,10 @@ export default function DashboardPage() {
   );
 }
 
-function getCurrentMonthLabel(): string {
-  return new Intl.DateTimeFormat("en", {
-    month: "long",
-    year: "numeric",
-  }).format(new Date());
+function sortByNewest(transactions: Transaction[]): Transaction[] {
+  return [...transactions].sort(
+    (a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime(),
+  );
 }
 
 function getGreeting(): string {

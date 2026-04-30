@@ -143,7 +143,6 @@ export default function SettingsPage() {
 
         <div className="relative mx-auto w-full max-w-full flex-1 px-4 pb-[calc(env(safe-area-inset-bottom)+6.6rem)] pt-2.5 md:px-8 md:pb-12 md:pt-0">
           <DashboardNavbar
-            dateLabel="Settings"
             greeting={getGreeting()}
             isSidebarOpen={isSidebarOpen}
             onAddTransaction={() => router.push("/transactions")}

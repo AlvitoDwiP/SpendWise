@@ -253,7 +253,6 @@ export default function ReportPage() {
 
         <div className="relative mx-auto w-full max-w-full flex-1 px-4 pb-[calc(env(safe-area-inset-bottom)+6.6rem)] pt-2.5 md:px-8 md:pb-12 md:pt-0">
           <DashboardNavbar
-            dateLabel={getPeriodLabel(period)}
             greeting={getGreeting()}
             isSidebarOpen={isSidebarOpen}
             onAddTransaction={() => router.push("/transactions")}
@@ -338,20 +337,6 @@ function getPeriodRange(period: ReportPeriod): { start: Date | null; end: Date |
     start: new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0),
     end: new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999),
   };
-}
-
-function getPeriodLabel(period: ReportPeriod): string {
-  if (period === "this_month") {
-    return "This Month";
-  }
-  if (period === "last_month") {
-    return "Last Month";
-  }
-  if (period === "this_year") {
-    return "This Year";
-  }
-
-  return "All Time";
 }
 
 function getGreeting(): string {

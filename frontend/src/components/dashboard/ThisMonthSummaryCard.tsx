@@ -1,29 +1,32 @@
 import { formatRupiah } from "../../lib/format";
 
 type ThisMonthSummaryCardProps = {
-  expense: number;
-  income: number;
-  transactionCount: number;
+  activeMonthExpense: number;
+  net: number;
+  totalExpenseAllTime: number;
+  totalExpenseLast28Days: number;
+  totalExpenseLast7Days: number;
 };
 
 export function ThisMonthSummaryCard({
-  expense,
-  income,
-  transactionCount,
+  activeMonthExpense,
+  net,
+  totalExpenseAllTime,
+  totalExpenseLast28Days,
+  totalExpenseLast7Days,
 }: ThisMonthSummaryCardProps) {
-  const net = income - expense;
+  const avgDaily = totalExpenseLast7Days / 7;
+  const avgWeekly = totalExpenseLast28Days / 4;
+  const avgMonthly = activeMonthExpense > 0 ? activeMonthExpense : totalExpenseAllTime;
 
   return (
     <section className="min-h-[270px] rounded-2xl border border-white/10 bg-white/5 p-5 shadow-2xl shadow-black/20 backdrop-blur-xl sm:p-6">
-      <h2 className="text-xl font-semibold text-white">This Month</h2>
-      <p className="mt-1 text-xs text-white/50">Only transactions in current month.</p>
+      <h2 className="text-xl font-semibold text-white">Spending Insights</h2>
+      <p className="mt-1 text-xs text-white/50">Short window averages for quick decisions.</p>
       <div className="mt-6 space-y-4">
-        <SummaryRow label="Total Income" tone="income" value={income} />
-        <SummaryRow label="Total Expense" tone="expense" value={expense} />
-        <div className="flex items-center justify-between border-b border-white/10 pb-4 text-sm text-white/55">
-          <span>Transactions</span>
-          <span className="font-semibold text-white">{transactionCount}</span>
-        </div>
+        <SummaryRow hint="Last 7 days" label="Avg daily spend" tone="expense" value={avgDaily} />
+        <SummaryRow hint="Last 4 weeks" label="Avg weekly spend" tone="expense" value={avgWeekly} />
+        <SummaryRow label="Avg monthly spend" tone="expense" value={avgMonthly} />
         <SummaryRow label="Net" tone={net < 0 ? "expense" : "income"} value={net} />
       </div>
     </section>
@@ -31,23 +34,24 @@ export function ThisMonthSummaryCard({
 }
 
 function SummaryRow({
+  hint,
   label,
   tone,
   value,
 }: {
+  hint?: string;
   label: string;
   tone: "income" | "expense";
   value: number;
 }) {
   return (
     <div className="flex items-center justify-between border-b border-white/10 pb-4 text-sm text-white/55">
-      <span>{label}</span>
-      <span
-        className={`font-semibold ${
-          tone === "income" ? "text-emerald-400" : "text-red-400"
-        }`}
-      >
-        {formatRupiah(value)}
+      <div>
+        <p>{label}</p>
+        {hint ? <p className="mt-0.5 text-[11px] text-white/35">{hint}</p> : null}
+      </div>
+      <span className={`font-semibold ${tone === "income" ? "text-emerald-400" : "text-red-400"}`}>
+        {formatRupiah(Number.isFinite(value) ? value : 0)}
       </span>
     </div>
   );
