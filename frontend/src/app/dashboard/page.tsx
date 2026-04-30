@@ -20,6 +20,7 @@ import { MobileBottomNav } from "../../components/dashboard/MobileBottomNav";
 import { RecentTransactionsCard } from "../../components/dashboard/RecentTransactionsCard";
 import { SpendingOverviewCard } from "../../components/dashboard/SpendingOverviewCard";
 import { ThisMonthSummaryCard } from "../../components/dashboard/ThisMonthSummaryCard";
+import { AddTransactionModal } from "../../components/transactions/AddTransactionModal";
 import {
   getDashboardSummary,
   getMe,
@@ -42,6 +43,7 @@ export default function DashboardPage() {
   const [dashboard, setDashboard] = useState<DashboardState | null>(null);
   const [error, setError] = useState("");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -172,6 +174,7 @@ export default function DashboardPage() {
               balance={summary.current_balance}
               greeting={greeting}
               monthlyIncome={summary.this_month_income}
+              onAddTransaction={() => setIsAddModalOpen(true)}
               transactionCount={summary.this_month_transaction_count}
               userName={user.name}
             />
@@ -206,12 +209,52 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
-      <MobileBottomNav onLogout={handleLogout} />
+      <MobileBottomNav
+        onAddTransaction={() => setIsAddModalOpen(true)}
+        onLogout={handleLogout}
+      />
       <DashboardDrawer
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
         onLogout={handleLogout}
       />
+      {isAddModalOpen ? (
+        <AddTransactionModal
+          onClose={() => setIsAddModalOpen(false)}
+          onCreated={(createdTransaction) => {
+            setDashboard((current) => {
+              if (!current) {
+                return current;
+              }
+
+              const isIncome = createdTransaction.type === "income";
+              const amount = createdTransaction.amount;
+
+              return {
+                ...current,
+                recentTransactions: [
+                  createdTransaction,
+                  ...current.recentTransactions,
+                ].slice(0, 8),
+                summary: {
+                  ...current.summary,
+                  current_balance: isIncome
+                    ? current.summary.current_balance + amount
+                    : current.summary.current_balance - amount,
+                  this_month_expense: isIncome
+                    ? current.summary.this_month_expense
+                    : current.summary.this_month_expense + amount,
+                  this_month_income: isIncome
+                    ? current.summary.this_month_income + amount
+                    : current.summary.this_month_income,
+                  this_month_transaction_count:
+                    current.summary.this_month_transaction_count + 1,
+                },
+              };
+            });
+          }}
+        />
+      ) : null}
     </main>
   );
 }

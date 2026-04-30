@@ -8,6 +8,7 @@ type BalanceHeroCardProps = {
   balance: number;
   greeting?: string;
   monthlyIncome: number;
+  onAddTransaction?: () => void;
   transactionCount: number;
   userName?: string;
 };
@@ -16,6 +17,7 @@ export function BalanceHeroCard({
   balance,
   greeting,
   monthlyIncome,
+  onAddTransaction,
   transactionCount,
   userName,
 }: BalanceHeroCardProps) {
@@ -69,6 +71,16 @@ export function BalanceHeroCard({
             Transactions
           </span>
         </div>
+
+        {onAddTransaction ? (
+          <button
+            className="mt-5 inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-purple-500 to-indigo-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-purple-500/20 transition hover:scale-[1.01] active:scale-[0.98] md:mt-6 md:w-auto"
+            onClick={onAddTransaction}
+            type="button"
+          >
+            Add Transaction
+          </button>
+        ) : null}
       </div>
     </motion.section>
   );

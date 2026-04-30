@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 type MobileBottomNavProps = {
+  onAddTransaction: () => void;
   onLogout: () => void;
 };
 
@@ -79,7 +80,10 @@ const menuItemVariants: Variants = {
   },
 };
 
-export function MobileBottomNav({ onLogout }: MobileBottomNavProps) {
+export function MobileBottomNav({
+  onAddTransaction,
+  onLogout,
+}: MobileBottomNavProps) {
   const [isMoreOpen, setIsMoreOpen] = useState(false);
 
   function closeMoreMenu() {
@@ -163,7 +167,10 @@ export function MobileBottomNav({ onLogout }: MobileBottomNavProps) {
           <motion.button
             aria-label="Add transaction"
             className="grid h-16 w-16 place-items-center rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 text-white shadow-lg shadow-purple-500/30 ring-8 ring-purple-500/10"
-            onClick={closeMoreMenu}
+            onClick={() => {
+              closeMoreMenu();
+              onAddTransaction();
+            }}
             type="button"
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.94 }}
