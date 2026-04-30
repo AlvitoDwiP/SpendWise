@@ -35,3 +35,7 @@ func GetUserByID(db *gorm.DB, id uint) (*models.User, error) {
 
 	return &user, nil
 }
+
+func UpdateUser(db *gorm.DB, user *models.User) error {
+	return db.Save(user).Error
+}
