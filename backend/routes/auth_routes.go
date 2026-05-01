@@ -12,4 +12,5 @@ func RegisterAuthRoutes(router *gin.Engine, db *gorm.DB) {
 
 	router.POST("/auth/register", authHandler.Register)
 	router.POST("/auth/login", authHandler.Login)
+	router.POST("/auth/google", authHandler.GoogleLogin)
 }

@@ -3,9 +3,11 @@ package models
 import "time"
 
 type User struct {
-	ID           uint          `gorm:"primaryKey"`
-	Name         string        `gorm:"not null"`
-	Email        string        `gorm:"unique;not null"`
+	ID           uint    `gorm:"primaryKey"`
+	Name         string  `gorm:"not null"`
+	Email        string  `gorm:"unique;not null"`
+	GoogleID     *string `gorm:"uniqueIndex"`
+	Picture      *string
 	PasswordHash string        `gorm:"not null"`
 	Categories   []Category    `gorm:"foreignKey:UserID"`
 	Transactions []Transaction `gorm:"foreignKey:UserID"`

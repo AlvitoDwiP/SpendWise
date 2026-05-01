@@ -15,7 +15,7 @@ type ApiErrorResponse = {
 type QueryParams = Record<string, string | number | boolean | null | undefined>;
 
 function resolveApiBaseUrl(): string {
-  const configured = process.env.NEXT_PUBLIC_API_URL?.trim();
+  const configured = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
   if (configured) {
     return configured;
   }
@@ -38,6 +38,7 @@ export type User = {
   id: number;
   name: string;
   email: string;
+  picture?: string | null;
   profile_photo_url?: string | null;
 };
 
@@ -105,6 +106,10 @@ export type LoginPayload = {
 export type LoginResponse = {
   user: User;
   token: string;
+};
+
+export type GoogleLoginPayload = {
+  id_token: string;
 };
 
 export type UpdateProfilePayload = {
@@ -222,6 +227,20 @@ export async function register(payload: RegisterPayload): Promise<User> {
 export async function login(payload: LoginPayload): Promise<LoginResponse> {
   const response = await apiRequest<ApiSuccessResponse<LoginResponse>>(
     "/auth/login",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+  );
+
+  return response.data;
+}
+
+export async function googleLogin(
+  payload: GoogleLoginPayload,
+): Promise<LoginResponse> {
+  const response = await apiRequest<ApiSuccessResponse<LoginResponse>>(
+    "/auth/google",
     {
       method: "POST",
       body: JSON.stringify(payload),

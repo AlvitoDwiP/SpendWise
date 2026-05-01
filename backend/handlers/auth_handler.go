@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"strings"
 
 	"SpendWise/dto"
 	"SpendWise/services"
@@ -25,6 +26,10 @@ type registerRequest struct {
 type loginRequest struct {
 	Email    string `json:"email" binding:"required"`
 	Password string `json:"password" binding:"required"`
+}
+
+type googleLoginRequest struct {
+	IDToken string `json:"id_token" binding:"required"`
 }
 
 type loginResponse struct {
@@ -77,10 +82,52 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	})
 }
 
+func (h *AuthHandler) GoogleLogin(c *gin.Context) {
+	var request googleLoginRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	user, err := services.LoginWithGoogle(c.Request.Context(), h.DB, request.IDToken)
+	if err != nil {
+		utils.ErrorResponse(c, googleAuthStatusFromError(err), err.Error())
+		return
+	}
+
+	token, err := utils.GenerateToken(user.ID, user.Email)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "failed to generate token")
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "Google login successful", loginResponse{
+		User:  dto.ToUserResponse(user),
+		Token: token,
+	})
+}
+
 func authStatusFromError(err error) int {
 	if errors.Is(err, services.ErrInvalidEmailOrPassword) {
 		return http.StatusUnauthorized
 	}
 
 	return http.StatusBadRequest
+}
+
+func googleAuthStatusFromError(err error) int {
+	errMessage := err.Error()
+	switch errMessage {
+	case "id_token is required", "email is required in google payload", "invalid request body":
+		return http.StatusBadRequest
+	case "invalid google token", "google token expired":
+		return http.StatusUnauthorized
+	}
+	if strings.HasPrefix(errMessage, "invalid google token audience:") ||
+		strings.HasPrefix(errMessage, "invalid google token issuer:") ||
+		strings.HasPrefix(errMessage, "invalid google token:") {
+		return http.StatusUnauthorized
+	}
+
+	return http.StatusInternalServerError
 }

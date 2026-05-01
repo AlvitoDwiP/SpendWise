@@ -3,9 +3,10 @@ package dto
 import "SpendWise/models"
 
 type UserResponse struct {
-	ID    uint   `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	ID      uint    `json:"id"`
+	Name    string  `json:"name"`
+	Email   string  `json:"email"`
+	Picture *string `json:"picture,omitempty"`
 }
 
 func ToUserResponse(user *models.User) UserResponse {
@@ -14,8 +15,9 @@ func ToUserResponse(user *models.User) UserResponse {
 	}
 
 	return UserResponse{
-		ID:    user.ID,
-		Name:  user.Name,
-		Email: user.Email,
+		ID:      user.ID,
+		Name:    user.Name,
+		Email:   user.Email,
+		Picture: user.Picture,
 	}
 }

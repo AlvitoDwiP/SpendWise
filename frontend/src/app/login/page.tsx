@@ -3,11 +3,40 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { CredentialResponse, GoogleLogin } from "@react-oauth/google";
 
-import { login, setToken } from "../../lib/api";
+import { googleLogin, login, setToken } from "../../lib/api";
+
+type GoogleTokenPayload = {
+  aud?: string;
+  iss?: string;
+  exp?: number;
+};
+
+function decodeBase64Url(value: string): string {
+  const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
+  return atob(padded);
+}
+
+function decodeGoogleTokenPayload(idToken: string): GoogleTokenPayload | null {
+  const parts = idToken.split(".");
+  if (parts.length !== 3) {
+    return null;
+  }
+
+  try {
+    const decoded = decodeBase64Url(parts[1]);
+    return JSON.parse(decoded) as GoogleTokenPayload;
+  } catch {
+    return null;
+  }
+}
 
 export default function LoginPage() {
   const router = useRouter();
+  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim();
+  const isGoogleLoginEnabled = Boolean(googleClientId);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -33,6 +62,32 @@ export default function LoginPage() {
       router.push("/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleGoogleSuccess(credentialResponse: CredentialResponse) {
+    const idToken = credentialResponse.credential?.trim();
+    if (!idToken) {
+      setError("Google login failed: token not found.");
+      return;
+    }
+    const payload = decodeGoogleTokenPayload(idToken);
+    console.log("GOOGLE_TOKEN_AUD:", payload?.aud);
+    console.log("GOOGLE_TOKEN_ISS:", payload?.iss);
+    console.log("GOOGLE_TOKEN_EXP:", payload?.exp);
+
+    setError("");
+    setIsSubmitting(true);
+    try {
+      const response = await googleLogin({ id_token: idToken });
+      setToken(response.token);
+      router.push("/dashboard");
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Google login failed. Please try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -100,6 +155,25 @@ export default function LoginPage() {
             {isSubmitting ? "Signing in..." : "Sign in"}
           </button>
         </form>
+        <div className="my-4 flex items-center gap-3 text-xs text-slate-400">
+          <span className="h-px flex-1 bg-slate-200" />
+          <span>OR</span>
+          <span className="h-px flex-1 bg-slate-200" />
+        </div>
+        {isGoogleLoginEnabled ? (
+          <div className="flex justify-center">
+            <GoogleLogin
+              onError={() => setError("Google login failed. Please try again.")}
+              onSuccess={handleGoogleSuccess}
+              text="continue_with"
+            />
+          </div>
+        ) : (
+          <p className="text-center text-xs text-slate-500">
+            Google login is unavailable. Please configure{" "}
+            <code>NEXT_PUBLIC_GOOGLE_CLIENT_ID</code>.
+          </p>
+        )}
 
         <p className="mt-6 text-center text-sm text-slate-600">
           New to SpendWise?{" "}
