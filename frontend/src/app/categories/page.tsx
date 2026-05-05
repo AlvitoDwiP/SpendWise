@@ -6,23 +6,20 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Folder, Plus } from "lucide-react";
 
-import { AddCategoryModal } from "../../components/categories/AddCategoryModal";
-import { DeleteCategoryConfirmModal } from "../../components/categories/DeleteCategoryConfirmModal";
-import { EditCategoryModal } from "../../components/categories/EditCategoryModal";
-import { CategoryList } from "../../components/categories/CategoryList";
+import { AddCategoryModal } from "@/features/categories/components/AddCategoryModal";
+import { DeleteCategoryConfirmModal } from "@/features/categories/components/DeleteCategoryConfirmModal";
+import { EditCategoryModal } from "@/features/categories/components/EditCategoryModal";
+import { CategoryList } from "@/features/categories/components/CategoryList";
 import {
   CategoryEmptyState,
   CategoryErrorState,
   CategoryLoadingState,
-} from "../../components/categories/CategoryStates";
-import { DashboardBackground } from "../../components/dashboard/DashboardBackground";
-import {
-  getCategories,
-  getToken,
-  type Category,
-  type CategoryType,
-} from "../../lib/api";
-import { logout } from "../../lib/auth";
+} from "@/features/categories/components/CategoryStates";
+import { getCategories } from "@/features/categories/api";
+import { getToken } from "@/lib/api/client";
+import { DashboardBackground } from "@/features/dashboard/components/DashboardBackground";
+import { logout } from "@/lib/auth";
+import type { Category, CategoryType } from "@/types/category.types";
 
 type CategorySummary = Record<CategoryType, number>;
 

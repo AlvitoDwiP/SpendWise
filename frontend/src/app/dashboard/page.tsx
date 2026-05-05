@@ -5,35 +5,33 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { CalendarDays, ChevronDown, Menu, Plus } from "lucide-react";
 
-import { BalanceHeroCard } from "../../components/dashboard/BalanceHeroCard";
-import { BalanceStatsCards } from "../../components/dashboard/BalanceStatsCards";
-import { DashboardBackground } from "../../components/dashboard/DashboardBackground";
-import { DashboardDrawer } from "../../components/dashboard/DashboardDrawer";
-import { DashboardSidebarCard } from "../../components/dashboard/DashboardSidebarCard";
+import { BalanceHeroCard } from "@/features/dashboard/components/BalanceHeroCard";
+import { BalanceStatsCards } from "@/features/dashboard/components/BalanceStatsCards";
+import { DashboardBackground } from "@/features/dashboard/components/DashboardBackground";
+import { DashboardDrawer } from "@/components/layout/DashboardDrawer";
+import { DashboardSidebarCard } from "@/components/layout/DashboardSidebarCard";
 import { AnimatePresence } from "framer-motion";
 import {
   DashboardErrorState,
   DashboardLoadingState,
-} from "../../components/dashboard/DashboardStates";
-import { MobileBottomNav } from "../../components/dashboard/MobileBottomNav";
-import { RecentTransactionsCard } from "../../components/dashboard/RecentTransactionsCard";
-import { SpendingOverviewCard } from "../../components/dashboard/SpendingOverviewCard";
-import { ThisMonthSummaryCard } from "../../components/dashboard/ThisMonthSummaryCard";
-import { AddTransactionModal } from "../../components/transactions/AddTransactionModal";
-import { DeleteTransactionConfirmModal } from "../../components/transactions/DeleteTransactionConfirmModal";
-import { EditTransactionModal } from "../../components/transactions/EditTransactionModal";
+} from "@/features/dashboard/components/DashboardStates";
+import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
+import { RecentTransactionsCard } from "@/features/dashboard/components/RecentTransactionsCard";
+import { SpendingOverviewCard } from "@/features/dashboard/components/SpendingOverviewCard";
+import { ThisMonthSummaryCard } from "@/features/dashboard/components/ThisMonthSummaryCard";
+import { AddTransactionModal } from "@/features/transactions/components/AddTransactionModal";
+import { DeleteTransactionConfirmModal } from "@/features/transactions/components/DeleteTransactionConfirmModal";
+import { EditTransactionModal } from "@/features/transactions/components/EditTransactionModal";
+import { getDashboardSummary, getRecentTransactions } from "@/features/dashboard/api";
+import { getMe } from "@/features/settings/api";
+import { deleteTransaction, getTransactions } from "@/features/transactions/api";
+import { getToken } from "@/lib/api/client";
 import {
-  deleteTransaction,
-  getDashboardSummary,
-  getMe,
-  getRecentTransactions,
-  getToken,
-  getTransactions,
   type DashboardSummary,
-  type Transaction,
-  type User,
-} from "../../lib/api";
-import { logout } from "../../lib/auth";
+} from "@/types/dashboard.types";
+import type { Transaction } from "@/types/transaction.types";
+import type { User } from "@/types/user.types";
+import { logout } from "@/lib/auth";
 
 type DashboardState = {
   allTransactions: Transaction[];

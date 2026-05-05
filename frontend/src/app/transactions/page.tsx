@@ -6,24 +6,20 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowLeft, List, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 
-import { AddTransactionModal } from "../../components/transactions/AddTransactionModal";
-import { DeleteTransactionConfirmModal } from "../../components/transactions/DeleteTransactionConfirmModal";
-import { EditTransactionModal } from "../../components/transactions/EditTransactionModal";
-import { TransactionFilters } from "../../components/transactions/TransactionFilters";
-import { TransactionList } from "../../components/transactions/TransactionList";
-import { TransactionLoadingState } from "../../components/transactions/LoadingState";
-import { useDebouncedValue } from "../../hooks/useDebouncedValue";
-import { DashboardBackground } from "../../components/dashboard/DashboardBackground";
-import {
-  deleteTransaction,
-  getCategories,
-  getToken,
-  getTransactions,
-  type Category,
-  type CategoryType,
-  type Transaction,
-} from "../../lib/api";
-import { logout } from "../../lib/auth";
+import { AddTransactionModal } from "@/features/transactions/components/AddTransactionModal";
+import { DeleteTransactionConfirmModal } from "@/features/transactions/components/DeleteTransactionConfirmModal";
+import { EditTransactionModal } from "@/features/transactions/components/EditTransactionModal";
+import { TransactionFilters } from "@/features/transactions/components/TransactionFilters";
+import { TransactionList } from "@/features/transactions/components/TransactionList";
+import { TransactionLoadingState } from "@/features/transactions/components/TransactionLoadingState";
+import { getCategories } from "@/features/categories/api";
+import { deleteTransaction, getTransactions } from "@/features/transactions/api";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { getToken } from "@/lib/api/client";
+import { DashboardBackground } from "@/features/dashboard/components/DashboardBackground";
+import { logout } from "@/lib/auth";
+import type { Category, CategoryType } from "@/types/category.types";
+import type { Transaction } from "@/types/transaction.types";
 
 type TransactionsState = {
   transactions: Transaction[];

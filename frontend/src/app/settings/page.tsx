@@ -5,26 +5,26 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 
-import { DashboardBackground } from "../../components/dashboard/DashboardBackground";
-import { DashboardDrawer } from "../../components/dashboard/DashboardDrawer";
-import { DashboardNavbar } from "../../components/dashboard/DashboardNavbar";
-import { DashboardSidebarCard } from "../../components/dashboard/DashboardSidebarCard";
-import { MobileBottomNav } from "../../components/dashboard/MobileBottomNav";
-import { SettingsDangerZone } from "../../components/settings/SettingsDangerZone";
-import { SettingsProfileSection } from "../../components/settings/SettingsProfileSection";
+import { DashboardBackground } from "@/features/dashboard/components/DashboardBackground";
+import { DashboardDrawer } from "@/components/layout/DashboardDrawer";
+import { DashboardNavbar } from "@/components/layout/DashboardNavbar";
+import { DashboardSidebarCard } from "@/components/layout/DashboardSidebarCard";
+import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
+import { SettingsDangerZone } from "@/features/settings/components/SettingsDangerZone";
+import { SettingsProfileSection } from "@/features/settings/components/SettingsProfileSection";
 import {
   SettingsErrorState,
   SettingsLoadingState,
-} from "../../components/settings/SettingsStates";
+} from "@/features/settings/components/SettingsStates";
 import {
   changePassword,
   getMe,
-  getToken,
   resetUserData,
-  type User,
   updateProfile,
-} from "../../lib/api";
-import { logout } from "../../lib/auth";
+} from "@/features/settings/api";
+import { getToken } from "@/lib/api/client";
+import { logout } from "@/lib/auth";
+import type { User } from "@/types/user.types";
 
 export default function SettingsPage() {
   const router = useRouter();

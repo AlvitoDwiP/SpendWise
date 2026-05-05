@@ -3,30 +3,29 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
-import { DashboardBackground } from "../../components/dashboard/DashboardBackground";
-import { DashboardDrawer } from "../../components/dashboard/DashboardDrawer";
-import { DashboardNavbar } from "../../components/dashboard/DashboardNavbar";
-import { DashboardSidebarCard } from "../../components/dashboard/DashboardSidebarCard";
-import { MobileBottomNav } from "../../components/dashboard/MobileBottomNav";
-import {
-  type Category,
-  getCategories,
-  getMe,
-  getToken,
-  getTransactions,
-  type Transaction,
-  type User,
-} from "../../lib/api";
-import { logout } from "../../lib/auth";
-import { ReportCategoryBreakdown } from "../../components/report/ReportCategoryBreakdown";
-import { ReportPeriodFilter, type ReportPeriod } from "../../components/report/ReportPeriodFilter";
-import { ReportSummaryCards } from "../../components/report/ReportSummaryCards";
+import { DashboardBackground } from "@/features/dashboard/components/DashboardBackground";
+import { DashboardDrawer } from "@/components/layout/DashboardDrawer";
+import { DashboardNavbar } from "@/components/layout/DashboardNavbar";
+import { DashboardSidebarCard } from "@/components/layout/DashboardSidebarCard";
+import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
+import { getCategories } from "@/features/categories/api";
+import { getMe } from "@/features/settings/api";
+import { logout } from "@/lib/auth";
+import { ReportCategoryBreakdown } from "@/features/report/components/ReportCategoryBreakdown";
+import { ReportPeriodFilter } from "@/features/report/components/ReportPeriodFilter";
+import { ReportSummaryCards } from "@/features/report/components/ReportSummaryCards";
 import {
   ReportEmptyState,
   ReportErrorState,
   ReportLoadingState,
-} from "../../components/report/ReportStates";
-import { ReportTransactionTrend } from "../../components/report/ReportTransactionTrend";
+} from "@/features/report/components/ReportStates";
+import { ReportTransactionTrend } from "@/features/report/components/ReportTransactionTrend";
+import type { ReportPeriod } from "@/features/report/types";
+import { getToken } from "@/lib/api/client";
+import type { Category } from "@/types/category.types";
+import type { Transaction } from "@/types/transaction.types";
+import type { User } from "@/types/user.types";
+import { getTransactions } from "@/features/transactions/api";
 
 type ReportData = {
   user: User;

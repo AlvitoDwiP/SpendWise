@@ -1,4 +1,4 @@
-import type { CategoryType } from "./api";
+import type { CategoryType } from "@/types/category.types";
 
 type CategoryVisual = {
   color: string;

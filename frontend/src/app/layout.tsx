@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "react-datepicker/dist/react-datepicker.css";
-import GoogleProvider from "../components/providers/GoogleProvider";
+import GoogleProvider from "@/components/providers/GoogleProvider";
 
 export const metadata: Metadata = {
   title: "SpendWise",
