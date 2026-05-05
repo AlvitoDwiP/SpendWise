@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 
 type SettingsProfileSectionProps = {
   initialName: string;
@@ -10,12 +17,18 @@ type SettingsProfileSectionProps = {
     currentPassword: string;
     newPassword: string;
     confirmPassword: string;
-  }) => Promise<void>;
+  }) => Promise<{
+    nameUpdated: boolean;
+    passwordChanged: boolean;
+  }>;
   onSavePhoto: (file: File) => Promise<void>;
 };
 
 const MAX_PHOTO_SIZE_BYTES = 2 * 1024 * 1024;
-const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+const PHOTO_SUCCESS_MESSAGE = "Profile photo updated successfully.";
+const DISPLAY_NAME_SUCCESS_MESSAGE = "Display name updated successfully.";
+const PASSWORD_SUCCESS_MESSAGE = "Password changed successfully.";
 
 export function SettingsProfileSection({
   initialName,
@@ -23,6 +36,7 @@ export function SettingsProfileSection({
   onSavePhoto,
   onSaveProfile,
 }: SettingsProfileSectionProps) {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [name, setName] = useState(initialName);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -102,17 +116,29 @@ export function SettingsProfileSection({
     setProfileSuccess("");
 
     try {
-      await onSaveProfile({
+      const result = await onSaveProfile({
         name: name.trim(),
         currentPassword,
         newPassword,
         confirmPassword,
       });
 
-      setProfileSuccess("Profile updated successfully.");
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
+      const successMessages = [
+        result.nameUpdated ? DISPLAY_NAME_SUCCESS_MESSAGE : "",
+        result.passwordChanged ? PASSWORD_SUCCESS_MESSAGE : "",
+      ].filter(Boolean);
+
+      if (successMessages.length > 0) {
+        const successMessage = successMessages.join(" ");
+        setProfileSuccess(successMessage);
+        window.alert(successMessage);
+      }
+
+      if (result.passwordChanged) {
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+      }
     } catch (err) {
       setProfileError(err instanceof Error ? err.message : "Failed to update profile.");
     } finally {
@@ -134,14 +160,14 @@ export function SettingsProfileSection({
 
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
       setSelectedPhotoFile(null);
-      setPhotoError("Photo must be JPG, JPEG, PNG, or WEBP.");
+      setPhotoError("Only JPG, JPEG, PNG, and WEBP files are allowed.");
       target.value = "";
       return;
     }
 
     if (file.size > MAX_PHOTO_SIZE_BYTES) {
       setSelectedPhotoFile(null);
-      setPhotoError("Photo size must be 2MB or less.");
+      setPhotoError("Photo must be 2MB or smaller.");
       target.value = "";
       return;
     }
@@ -161,8 +187,12 @@ export function SettingsProfileSection({
 
     try {
       await onSavePhoto(selectedPhotoFile);
-      setPhotoSuccess("Profile photo updated successfully.");
+      setPhotoSuccess(PHOTO_SUCCESS_MESSAGE);
+      window.alert(PHOTO_SUCCESS_MESSAGE);
       setSelectedPhotoFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     } catch (err) {
       setPhotoError(err instanceof Error ? err.message : "Failed to upload profile photo.");
     } finally {
@@ -192,15 +222,20 @@ export function SettingsProfileSection({
           </div>
 
           <div className="w-full">
-            <label className="inline-flex h-10 cursor-pointer items-center rounded-lg border border-white/10 bg-white/5 px-3 text-sm font-medium text-white/80 transition hover:bg-white/10">
-              {selectedPhotoFile ? "Change Photo" : "Upload Photo"}
-              <input
-                accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
-                className="hidden"
-                onInput={handleSelectPhoto}
-                type="file"
-              />
-            </label>
+            <input
+              accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/jpg,image/png,image/webp"
+              className="hidden"
+              onChange={handleSelectPhoto}
+              ref={fileInputRef}
+              type="file"
+            />
+            <button
+              className="inline-flex h-10 items-center rounded-lg border border-white/10 bg-white/5 px-3 text-sm font-medium text-white/80 transition hover:bg-white/10"
+              onClick={() => fileInputRef.current?.click()}
+              type="button"
+            >
+              Change Photo
+            </button>
             <button
               className="ml-2 h-10 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-500 px-4 text-sm font-semibold text-white shadow-lg shadow-purple-500/20 transition disabled:cursor-not-allowed disabled:opacity-50"
               disabled={!canSavePhoto}
@@ -212,6 +247,9 @@ export function SettingsProfileSection({
             <p className="mt-2 text-xs text-white/45">Allowed: JPG, JPEG, PNG, WEBP. Max 2MB.</p>
             {photoError ? <p className="mt-2 text-sm text-red-300">{photoError}</p> : null}
             {photoSuccess ? <p className="mt-2 text-sm text-emerald-300">{photoSuccess}</p> : null}
+            {!photoError && !photoSuccess && !selectedPhotoFile ? (
+              <p className="mt-2 text-sm text-white/45">No profile photo changes yet.</p>
+            ) : null}
           </div>
         </div>
       </div>

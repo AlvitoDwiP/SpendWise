@@ -39,3 +39,18 @@ export async function resetUserData(): Promise<void> {
     method: "POST",
   });
 }
+
+export async function uploadProfilePhoto(file: File): Promise<User> {
+  const formData = new FormData();
+  formData.append("photo", file);
+
+  const response = await apiRequest<ApiSuccessResponse<User>>(
+    API_ENDPOINTS.profile.photo,
+    {
+      method: "PUT",
+      body: formData,
+    },
+  );
+
+  return response.data;
+}

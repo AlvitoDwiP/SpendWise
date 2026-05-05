@@ -13,6 +13,7 @@ export const API_ENDPOINTS = {
   },
   profile: {
     me: "/me",
+    photo: "/me/photo",
     password: "/me/password",
     resetData: "/me/reset-data",
   },

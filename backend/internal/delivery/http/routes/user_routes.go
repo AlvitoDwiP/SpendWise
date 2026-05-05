@@ -12,6 +12,7 @@ func RegisterUserRoutes(router *gin.RouterGroup, db *gorm.DB) {
 
 	router.GET("/me", userHandler.GetMe)
 	router.PUT("/me", userHandler.UpdateProfile)
+	router.PUT("/me/photo", userHandler.UpdateProfilePhoto)
 	router.PUT("/me/password", userHandler.ChangePassword)
 	router.POST("/me/reset-data", userHandler.ResetUserData)
 }

@@ -30,6 +30,7 @@ func Run() error {
 	}
 
 	router := gin.Default()
+	router.Static("/uploads", "./uploads")
 
 	frontendURL := config.GetEnv("FRONTEND_URL", "http://localhost:3000")
 	frontendURLs := parseAllowedOrigins(frontendURL)

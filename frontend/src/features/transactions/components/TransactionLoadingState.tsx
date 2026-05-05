@@ -12,9 +12,3 @@ export function TransactionLoadingState() {
     </div>
   );
 }
-
-export function TransactionPaginationLoadingState() {
-  return (
-    <div className="h-16 rounded-xl bg-gradient-to-r from-slate-700/30 to-slate-700/50 animate-pulse" />
-  );
-}

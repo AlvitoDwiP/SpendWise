@@ -25,7 +25,7 @@ import { EditTransactionModal } from "@/features/transactions/components/EditTra
 import { getDashboardSummary, getRecentTransactions } from "@/features/dashboard/api";
 import { getMe } from "@/features/settings/api";
 import { deleteTransaction, getTransactions } from "@/features/transactions/api";
-import { getToken } from "@/lib/api/client";
+import { buildUrl, getToken } from "@/lib/api/client";
 import {
   type DashboardSummary,
 } from "@/types/dashboard.types";
@@ -302,6 +302,9 @@ export default function DashboardPage() {
   }
 
   const { recentTransactions, summary, user } = dashboard;
+  const resolvedProfilePhotoUrl = user.profile_photo_url
+    ? buildUrl(user.profile_photo_url)
+    : null;
 
   return (
     <main className="relative min-h-screen w-full max-w-full overflow-x-clip bg-[#0f0f10] text-white">
@@ -370,12 +373,12 @@ export default function DashboardPage() {
                 <div className="min-w-0">
                   <div className="mb-2 flex items-center gap-3">
                     <div className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full border border-white/10 bg-white/10 text-xs font-semibold text-white">
-                      {user.profile_photo_url ? (
+                      {resolvedProfilePhotoUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           alt={`${user.name} profile`}
                           className="h-full w-full object-cover"
-                          src={user.profile_photo_url}
+                          src={resolvedProfilePhotoUrl}
                         />
                       ) : (
                         getInitial(user.name)
@@ -393,7 +396,7 @@ export default function DashboardPage() {
               <BalanceHeroCard
                 balance={summary.current_balance}
                 greeting={greeting}
-                profilePhotoUrl={user.profile_photo_url}
+                profilePhotoUrl={resolvedProfilePhotoUrl}
                 userName={user.name}
               />
               <BalanceStatsCards

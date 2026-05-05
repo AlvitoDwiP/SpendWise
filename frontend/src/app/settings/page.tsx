@@ -20,9 +20,10 @@ import {
   changePassword,
   getMe,
   resetUserData,
+  uploadProfilePhoto,
   updateProfile,
 } from "@/features/settings/api";
-import { getToken } from "@/lib/api/client";
+import { buildUrl, getToken } from "@/lib/api/client";
 import { logout } from "@/lib/auth";
 import type { User } from "@/types/user.types";
 
@@ -89,7 +90,7 @@ export default function SettingsPage() {
     currentPassword: string;
     newPassword: string;
     confirmPassword: string;
-  }) {
+  }): Promise<{ nameUpdated: boolean; passwordChanged: boolean }> {
     if (!user) {
       throw new Error("User profile is not ready yet.");
     }
@@ -106,11 +107,14 @@ export default function SettingsPage() {
     }
 
     let nextUser = user;
+    let nameUpdated = false;
+    let passwordChanged = false;
 
     if (isNameChanged) {
       try {
         nextUser = await updateProfile({ name: trimmedName });
         setUser(nextUser);
+        nameUpdated = true;
       } catch (err) {
         throw new Error(
           err instanceof Error ? `Failed to update name: ${err.message}` : "Failed to update name.",
@@ -124,6 +128,7 @@ export default function SettingsPage() {
           current_password: payload.currentPassword,
           new_password: payload.newPassword,
         });
+        passwordChanged = true;
       } catch (err) {
         setUser(nextUser);
         throw new Error(
@@ -133,10 +138,29 @@ export default function SettingsPage() {
         );
       }
     }
+
+    return {
+      nameUpdated,
+      passwordChanged,
+    };
   }
 
-  async function handleSavePhoto(): Promise<void> {
-    throw new Error("Profile photo upload is not available yet.");
+  async function handleSavePhoto(file: File): Promise<void> {
+    try {
+      const updatedUser = await uploadProfilePhoto(file);
+      setUser(updatedUser);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to upload profile photo.";
+
+      if (isAuthError(message)) {
+        logout();
+        router.replace("/login");
+        throw new Error(message);
+      }
+
+      throw err;
+    }
   }
 
   async function handleResetData(): Promise<void> {
@@ -168,6 +192,10 @@ export default function SettingsPage() {
     );
   }
 
+  const resolvedProfilePhotoUrl = user.profile_photo_url
+    ? buildUrl(user.profile_photo_url)
+    : null;
+
   return (
     <main className="relative min-h-screen w-full max-w-full overflow-x-clip bg-[#0f0f10] text-white">
       <DashboardBackground />
@@ -192,7 +220,7 @@ export default function SettingsPage() {
                 setIsDrawerOpen(true);
               }
             }}
-            profilePhotoUrl={user.profile_photo_url}
+            profilePhotoUrl={resolvedProfilePhotoUrl}
             userName={user.name}
           />
 
@@ -212,8 +240,9 @@ export default function SettingsPage() {
             </section>
 
             <SettingsProfileSection
+              key={`${user.id}-${user.name}-${user.profile_photo_url ?? ""}`}
               initialName={user.name}
-              initialProfilePhotoUrl={user.profile_photo_url}
+              initialProfilePhotoUrl={resolvedProfilePhotoUrl}
               onSavePhoto={handleSavePhoto}
               onSaveProfile={handleSaveProfile}
             />

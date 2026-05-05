@@ -3,14 +3,15 @@ package models
 import "time"
 
 type User struct {
-	ID           uint    `gorm:"primaryKey"`
-	Name         string  `gorm:"not null"`
-	Email        string  `gorm:"unique;not null"`
-	GoogleID     *string `gorm:"uniqueIndex"`
-	Picture      *string
-	PasswordHash string        `gorm:"not null"`
-	Categories   []Category    `gorm:"foreignKey:UserID"`
-	Transactions []Transaction `gorm:"foreignKey:UserID"`
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	ID              uint    `gorm:"primaryKey"`
+	Name            string  `gorm:"not null"`
+	Email           string  `gorm:"unique;not null"`
+	GoogleID        *string `gorm:"uniqueIndex"`
+	Picture         *string
+	ProfilePhotoURL *string       `gorm:"column:profile_photo_url"`
+	PasswordHash    string        `gorm:"not null"`
+	Categories      []Category    `gorm:"foreignKey:UserID"`
+	Transactions    []Transaction `gorm:"foreignKey:UserID"`
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
 }

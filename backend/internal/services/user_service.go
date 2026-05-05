@@ -85,3 +85,26 @@ func ChangeCurrentUserPassword(db *gorm.DB, userID uint, currentPassword string,
 
 	return nil
 }
+
+func UpdateCurrentUserProfilePhoto(db *gorm.DB, userID uint, photoURL string) (*models.User, error) {
+	if userID == 0 {
+		return nil, ErrInvalidUserID
+	}
+
+	trimmedPhotoURL := strings.TrimSpace(photoURL)
+	if trimmedPhotoURL == "" {
+		return nil, errors.New("profile photo url is required")
+	}
+
+	user, err := repositories.GetUserByID(db, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	user.ProfilePhotoURL = &trimmedPhotoURL
+	if err := repositories.UpdateUser(db, user); err != nil {
+		return nil, err
+	}
+
+	return sanitizeUser(user), nil
+}
