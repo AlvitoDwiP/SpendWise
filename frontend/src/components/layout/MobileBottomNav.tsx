@@ -118,14 +118,14 @@ export function MobileBottomNav({
 
       <nav
         aria-label="Mobile navigation"
-        className="fixed bottom-[calc(env(safe-area-inset-bottom)+0.55rem)] left-4 right-4 z-40 h-[62px] w-auto max-w-[calc(100vw-2rem)] rounded-3xl border border-white/10 bg-white/5 shadow-[0_24px_70px_rgba(0,0,0,0.45)] backdrop-blur-xl md:hidden"
+        className="fixed bottom-0 left-0 right-0 z-[70] h-[88px] border-t border-[#332c24] bg-[#15110e] md:hidden"
       >
-        <div className="grid h-full grid-cols-[minmax(0,1fr)_72px_minmax(0,1fr)] items-center px-2.5">
+        <div className="mx-auto grid h-full max-w-[430px] grid-cols-[minmax(0,1fr)_84px_minmax(0,1fr)] items-center px-7 pb-[calc(env(safe-area-inset-bottom)+0.35rem)] pt-2">
           <MobileNavButton
             active={pathname === "/dashboard" || pathname.startsWith("/dashboard/")}
             href="/dashboard"
             icon={Home}
-            label="Home"
+            label="Dashboard"
             onClick={closeMoreMenu}
           />
 
@@ -136,7 +136,7 @@ export function MobileBottomNav({
               active={pathname === "/report" || pathname.startsWith("/report/")}
               href="/report"
               icon={BarChart3}
-              label="Report"
+              label="Reports"
               onClick={closeMoreMenu}
             />
 
@@ -154,10 +154,10 @@ export function MobileBottomNav({
                 aria-expanded={isMoreOpen}
                 aria-haspopup="menu"
                 aria-label="More navigation options"
-                className={`flex h-full min-w-0 flex-col items-center justify-center gap-0.5 text-center transition ${
+                className={`flex h-full min-w-0 flex-col items-center justify-center gap-1 text-center transition ${
                   isMoreOpen
-                    ? "text-purple-300"
-                    : "text-white/45 hover:text-white/70"
+                    ? "text-[var(--accent-green)]"
+                    : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
                 }`}
                 onClick={() => setIsMoreOpen((isOpen) => !isOpen)}
                 type="button"
@@ -173,7 +173,7 @@ export function MobileBottomNav({
         <div className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2">
           <motion.button
             aria-label="Add transaction"
-            className="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 text-white shadow-lg shadow-purple-500/30 ring-8 ring-purple-500/10"
+            className="grid h-14 w-14 place-items-center rounded-full border border-[rgba(237,226,200,0.5)] bg-[var(--accent-cream)] text-[#181410] shadow-[0_14px_24px_rgba(0,0,0,0.18)] ring-[8px] ring-[#181410]"
             onClick={() => {
               closeMoreMenu();
               onAddTransaction();
@@ -197,8 +197,8 @@ function MobileNavButton({
   label,
   onClick,
 }: MobileNavButtonProps) {
-  const className = `flex h-full min-w-0 flex-col items-center justify-center gap-0.5 text-center transition ${
-    active ? "text-purple-300" : "text-white/45 hover:text-white/70"
+  const className = `flex h-full min-w-0 flex-col items-center justify-center gap-1 text-center transition ${
+    active ? "text-[var(--accent-green)]" : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
   }`;
 
   if (href) {
@@ -265,15 +265,17 @@ function MobileMoreMenuItem({
 }: MobileMoreMenuItemProps) {
   const Icon = item.icon;
   const isDanger = item.tone === "danger";
-  const itemClassName = `flex h-12 min-w-[140px] items-center gap-3 rounded-2xl border border-white/10 px-4 text-sm font-medium shadow-[0_18px_45px_rgba(0,0,0,0.32)] backdrop-blur-xl transition ${
+  const itemClassName = `flex h-12 min-w-[140px] items-center gap-3 rounded-2xl border border-[var(--border-muted)] px-4 text-sm font-medium shadow-[0_18px_40px_rgba(0,0,0,0.18)] transition ${
     isDanger
-      ? "text-red-300 hover:bg-red-500/10"
+      ? "bg-[var(--surface-base)] text-[var(--accent-red)] hover:bg-[rgba(216,124,124,0.12)]"
       : isActive
-        ? "bg-purple-500/20 text-purple-200"
-        : "bg-[#1c1c1e]/95 text-white/80 hover:bg-white/10 hover:text-white"
+        ? "bg-[var(--accent-green-soft)] text-[var(--accent-green)]"
+        : "bg-[var(--surface-base)] text-[var(--text-primary)] hover:bg-[var(--surface-elevated)] hover:text-[var(--text-primary)]"
   }`;
   const iconClassName = `grid h-8 w-8 place-items-center rounded-full ${
-    isDanger ? "bg-red-500/10 text-red-300" : "bg-purple-500/15 text-purple-300"
+    isDanger
+      ? "bg-[var(--accent-red-soft)] text-[var(--accent-red)]"
+      : "bg-[var(--accent-purple-soft)] text-[var(--accent-purple)]"
   }`;
 
   const content = (
