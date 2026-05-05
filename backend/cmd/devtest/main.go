@@ -4,11 +4,11 @@ import (
 	"log"
 	"time"
 
-	"SpendWise/config"
-	"SpendWise/models"
-	"SpendWise/repositories"
-	"SpendWise/services"
-	"SpendWise/utils"
+	"SpendWise/internal/config"
+	"SpendWise/internal/domain/models"
+	"SpendWise/internal/domain/repositories"
+	"SpendWise/internal/services"
+	"SpendWise/internal/utils"
 
 	"gorm.io/gorm"
 )
