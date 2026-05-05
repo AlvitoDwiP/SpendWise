@@ -26,9 +26,9 @@ export function MobileInsightCard({
   if (!isVisible) {
     return (
       <section className="px-5 md:hidden">
-        <div className="flex items-center justify-between gap-3 rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(34,34,38,0.98),rgba(24,24,27,0.95))] px-4 py-3 shadow-[0_18px_50px_rgba(0,0,0,0.22)]">
+        <div className="warm-panel-compact flex items-center justify-between gap-3 px-4 py-3">
           <button
-            className="inline-flex items-center gap-1 text-sm font-medium text-cyan-300"
+            className="inline-flex items-center gap-1 text-sm font-medium text-[var(--accent-cream)]"
             onClick={() => setIsVisible(true)}
             type="button"
           >
@@ -39,17 +39,17 @@ export function MobileInsightCard({
           <label className="relative min-w-0">
             <span className="sr-only">Choose dashboard period</span>
             <select
-              className="h-10 appearance-none rounded-full border border-white/10 bg-white/[0.05] px-4 pr-8 text-sm font-medium text-white/78 outline-none"
+              className="chip-base h-10 appearance-none pr-8 text-sm"
               onChange={(event) => onMonthChange(event.target.value)}
               value={selectedMonthKey}
             >
               {monthOptions.map((option) => (
-                <option className="bg-[#1c1c1e] text-white" key={option.key} value={option.key}>
+                <option className="bg-[#211d18] text-white" key={option.key} value={option.key}>
                   {option.label}
                 </option>
               ))}
             </select>
-            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/45">
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
               {monthLabel.slice(0, 3)}
             </span>
           </label>
@@ -60,15 +60,15 @@ export function MobileInsightCard({
 
   return (
     <section className="px-5 md:hidden">
-      <div className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(34,34,38,0.98),rgba(24,24,27,0.95))] p-5 shadow-[0_18px_50px_rgba(0,0,0,0.28)]">
+      <div className="warm-panel p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="flex min-w-0 items-start gap-3.5">
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-cyan-400/15 bg-cyan-400/10 text-cyan-300">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[rgba(237,226,200,0.2)] bg-[rgba(237,226,200,0.08)] text-[var(--accent-cream)]">
               <BellRing className="h-5 w-5" />
             </span>
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-white">Monthly Insight</p>
-              <p className="mt-1 text-sm leading-6 text-white/62">
+              <p className="text-sm font-semibold text-[var(--text-primary)]">Monthly Insight</p>
+              <p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">
                 {summary}
               </p>
             </div>
@@ -76,7 +76,7 @@ export function MobileInsightCard({
 
           <button
             aria-label="Close insight card"
-            className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/8 bg-white/[0.04] text-white/40 transition hover:text-white/70"
+            className="icon-button h-8 w-8 shrink-0 rounded-full text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
             onClick={() => setIsVisible(false)}
             type="button"
           >
@@ -84,10 +84,10 @@ export function MobileInsightCard({
           </button>
         </div>
 
-        <div className="mt-4 border-t border-white/8 pt-3.5">
+        <div className="mt-4 border-t border-[var(--border-muted)] pt-3.5">
           <div className="flex items-center justify-between gap-3">
             <button
-              className="inline-flex items-center gap-1 text-sm font-medium text-cyan-300"
+              className="inline-flex items-center gap-1 text-sm font-medium text-[var(--accent-cream)]"
               onClick={() => setIsVisible(false)}
               type="button"
             >
@@ -98,17 +98,17 @@ export function MobileInsightCard({
             <label className="relative min-w-0">
               <span className="sr-only">Choose dashboard period</span>
               <select
-                className="h-10 appearance-none rounded-full border border-white/10 bg-white/[0.05] px-4 pr-8 text-sm font-medium text-white/78 outline-none"
+                className="chip-base h-10 appearance-none pr-8 text-sm"
                 onChange={(event) => onMonthChange(event.target.value)}
                 value={selectedMonthKey}
               >
                 {monthOptions.map((option) => (
-                  <option className="bg-[#1c1c1e] text-white" key={option.key} value={option.key}>
+                  <option className="bg-[#211d18] text-white" key={option.key} value={option.key}>
                     {option.label}
                   </option>
                 ))}
               </select>
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/45">
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
                 {monthLabel.slice(0, 3)}
               </span>
             </label>

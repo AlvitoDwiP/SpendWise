@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, type MouseEventHandler } from "react";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import {
@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 type MobileBottomNavProps = {
+  isAuthenticated?: boolean;
   onAddTransaction: () => void;
   onLogout: () => void;
 };
@@ -84,10 +85,12 @@ const menuItemVariants: Variants = {
 };
 
 export function MobileBottomNav({
+  isAuthenticated = true,
   onAddTransaction,
   onLogout,
 }: MobileBottomNavProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
 
   function closeMoreMenu() {
@@ -134,7 +137,7 @@ export function MobileBottomNav({
           <div className="grid h-full grid-cols-2 items-center">
             <MobileNavButton
               active={pathname === "/report" || pathname.startsWith("/report/")}
-              href="/report"
+              href={isAuthenticated ? "/report" : "/login"}
               icon={BarChart3}
               label="Reports"
               onClick={closeMoreMenu}
@@ -159,12 +162,18 @@ export function MobileBottomNav({
                     ? "text-[var(--accent-green)]"
                     : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
                 }`}
-                onClick={() => setIsMoreOpen((isOpen) => !isOpen)}
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    router.push("/login");
+                    return;
+                  }
+                  setIsMoreOpen((isOpen) => !isOpen);
+                }}
                 type="button"
                 whileTap={{ scale: 0.94 }}
               >
                 <MoreHorizontal className="h-5 w-5" />
-                <span className="text-[11px] font-medium">More</span>
+                <span className="text-[11px] font-medium tracking-[0.04em]">More</span>
               </motion.button>
             </div>
           </div>
@@ -173,9 +182,13 @@ export function MobileBottomNav({
         <div className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2">
           <motion.button
             aria-label="Add transaction"
-            className="grid h-14 w-14 place-items-center rounded-full border border-[rgba(237,226,200,0.5)] bg-[var(--accent-cream)] text-[#181410] shadow-[0_14px_24px_rgba(0,0,0,0.18)] ring-[8px] ring-[#181410]"
+            className="grid h-14 w-14 place-items-center rounded-full border border-[rgba(237,226,200,0.32)] bg-[var(--accent-cream)] text-[#181410] shadow-[0_14px_24px_rgba(0,0,0,0.18)] ring-[8px] ring-[#181410]"
             onClick={() => {
               closeMoreMenu();
+              if (!isAuthenticated) {
+                router.push("/login");
+                return;
+              }
               onAddTransaction();
             }}
             type="button"
@@ -210,7 +223,7 @@ function MobileNavButton({
         onClick={onClick}
       >
         <Icon className="h-5 w-5" />
-        <span className="text-[11px] font-medium">{label}</span>
+        <span className="text-[11px] font-medium tracking-[0.04em]">{label}</span>
       </Link>
     );
   }
@@ -223,7 +236,7 @@ function MobileNavButton({
       type="button"
     >
       <Icon className="h-5 w-5" />
-      <span className="text-[11px] font-medium">{label}</span>
+      <span className="text-[11px] font-medium tracking-[0.04em]">{label}</span>
     </button>
   );
 }

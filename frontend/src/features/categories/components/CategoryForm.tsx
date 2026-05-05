@@ -25,9 +25,9 @@ export function CategoryForm({
   return (
     <>
       <label className="block">
-        <span className="mb-2 block text-sm font-medium text-white/75">Name</span>
+        <span className="field-label">Name</span>
         <input
-          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-purple-400/50 focus:ring-2 focus:ring-purple-400/25 disabled:cursor-not-allowed disabled:opacity-60"
+          className="input-base"
           disabled={disabled}
           maxLength={60}
           onChange={(event) => onNameChange(event.target.value)}
@@ -38,9 +38,9 @@ export function CategoryForm({
       </label>
 
       <label className="block">
-        <span className="mb-2 block text-sm font-medium text-white/75">Type</span>
+        <span className="field-label">Type</span>
         <select
-          className="w-full rounded-xl border border-white/10 bg-[#232326] px-4 py-2.5 text-sm text-white outline-none transition focus:border-purple-400/50 focus:ring-2 focus:ring-purple-400/25 disabled:cursor-not-allowed disabled:opacity-60"
+          className="input-base appearance-none"
           disabled={disabled}
           onChange={(event) => onTypeChange(event.target.value as CategoryType)}
           value={type}

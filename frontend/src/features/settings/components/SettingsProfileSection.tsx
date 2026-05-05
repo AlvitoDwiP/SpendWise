@@ -203,16 +203,17 @@ export function SettingsProfileSection({
   const displayPhoto = selectedPhotoPreviewUrl || initialProfilePhotoUrl || "";
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-[#1c1c1e]/90 p-4 shadow-2xl shadow-black/20 backdrop-blur-xl sm:p-6">
-      <h2 className="text-xl font-semibold text-white">Profile</h2>
-      <p className="mt-1 text-sm text-white/55">
+    <section className="warm-panel app-card-pad sm:p-6">
+      <p className="page-label">Profile</p>
+      <h2 className="mt-3 text-[34px] leading-[1.08] tracking-[-0.04em] text-[var(--text-primary)]" style={{ fontFamily: "var(--font-serif)" }}>Profile</h2>
+      <p className="mt-3 text-sm text-[var(--text-secondary)]">
         Manage your photo, name, and account password.
       </p>
 
-      <div className="mt-5 rounded-xl border border-white/10 bg-white/[0.03] p-4">
-        <p className="text-sm font-medium text-white/80">Profile Photo</p>
+      <div className="warm-elevated mt-5 p-4">
+        <p className="field-label">Profile Photo</p>
         <div className="mt-3 flex flex-col items-start gap-4">
-          <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-full border border-white/10 bg-white/10 text-xl font-semibold text-white">
+          <div className="avatar-shell grid h-20 w-20 place-items-center text-xl font-semibold text-[var(--text-primary)]">
             {displayPhoto ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img alt={`${name} profile`} className="h-full w-full object-cover" src={displayPhoto} />
@@ -230,36 +231,36 @@ export function SettingsProfileSection({
               type="file"
             />
             <button
-              className="inline-flex h-10 items-center rounded-lg border border-white/10 bg-white/5 px-3 text-sm font-medium text-white/80 transition hover:bg-white/10"
+              className="btn-base btn-secondary min-h-[42px] rounded-[16px] px-4"
               onClick={() => fileInputRef.current?.click()}
               type="button"
             >
               Change Photo
             </button>
             <button
-              className="ml-2 h-10 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-500 px-4 text-sm font-semibold text-white shadow-lg shadow-purple-500/20 transition disabled:cursor-not-allowed disabled:opacity-50"
+              className="btn-base btn-primary ml-2 min-h-[42px] rounded-[16px] px-4 disabled:cursor-not-allowed disabled:opacity-50"
               disabled={!canSavePhoto}
               onClick={handleSavePhoto}
               type="button"
             >
               {isUploadingPhoto ? "Saving photo..." : "Save Photo"}
             </button>
-            <p className="mt-2 text-xs text-white/45">Allowed: JPG, JPEG, PNG, WEBP. Max 2MB.</p>
-            {photoError ? <p className="mt-2 text-sm text-red-300">{photoError}</p> : null}
-            {photoSuccess ? <p className="mt-2 text-sm text-emerald-300">{photoSuccess}</p> : null}
+            <p className="mt-2 text-xs text-[var(--text-muted)]">Allowed: JPG, JPEG, PNG, WEBP. Max 2MB.</p>
+            {photoError ? <p className="alert-error mt-2">{photoError}</p> : null}
+            {photoSuccess ? <p className="alert-success mt-2">{photoSuccess}</p> : null}
             {!photoError && !photoSuccess && !selectedPhotoFile ? (
-              <p className="mt-2 text-sm text-white/45">No profile photo changes yet.</p>
+              <p className="mt-2 text-sm text-[var(--text-muted)]">No profile photo changes yet.</p>
             ) : null}
           </div>
         </div>
       </div>
 
       <form className="mt-5 space-y-4" onSubmit={handleSubmit}>
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-          <p className="text-sm font-medium text-white/80">Name</p>
+        <div className="warm-elevated p-4">
+          <p className="field-label">Name</p>
           <Field label="Display Name">
             <input
-              className="h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-purple-400/50 focus:ring-2 focus:ring-purple-400/20"
+              className="input-base"
               onChange={(event) => setName(event.target.value)}
               placeholder="Your name"
               type="text"
@@ -268,13 +269,13 @@ export function SettingsProfileSection({
           </Field>
         </div>
 
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-          <p className="text-sm font-medium text-white/80">Change Password</p>
+        <div className="warm-elevated p-4">
+          <p className="field-label">Change Password</p>
           <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
             <Field label="Current Password">
               <input
                 autoComplete="current-password"
-                className="h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-purple-400/50 focus:ring-2 focus:ring-purple-400/20"
+                className="input-base"
                 onChange={(event) => setCurrentPassword(event.target.value)}
                 placeholder="Current password"
                 type="password"
@@ -285,7 +286,7 @@ export function SettingsProfileSection({
             <Field label="New Password">
               <input
                 autoComplete="new-password"
-                className="h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-purple-400/50 focus:ring-2 focus:ring-purple-400/20"
+                className="input-base"
                 onChange={(event) => setNewPassword(event.target.value)}
                 placeholder="At least 6 characters"
                 type="password"
@@ -298,7 +299,7 @@ export function SettingsProfileSection({
             <Field label="Confirm New Password">
               <input
                 autoComplete="new-password"
-                className="h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-purple-400/50 focus:ring-2 focus:ring-purple-400/20"
+                className="input-base"
                 onChange={(event) => setConfirmPassword(event.target.value)}
                 placeholder="Repeat new password"
                 type="password"
@@ -308,15 +309,15 @@ export function SettingsProfileSection({
           </div>
         </div>
 
-        {profileError ? <p className="text-sm text-red-300">{profileError}</p> : null}
-        {profileSuccess ? <p className="text-sm text-emerald-300">{profileSuccess}</p> : null}
-        {!profileError && validationMessage ? <p className="text-sm text-amber-300">{validationMessage}</p> : null}
+        {profileError ? <p className="alert-error">{profileError}</p> : null}
+        {profileSuccess ? <p className="alert-success">{profileSuccess}</p> : null}
+        {!profileError && validationMessage ? <p className="alert-warning">{validationMessage}</p> : null}
         {!profileError && !validationMessage && !hasMeaningfulChange ? (
-          <p className="text-sm text-white/45">No profile changes yet.</p>
+          <p className="text-sm text-[var(--text-muted)]">No profile changes yet.</p>
         ) : null}
 
         <button
-          className="h-11 w-full rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 px-4 text-sm font-semibold text-white shadow-lg shadow-purple-500/20 transition disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:min-w-36"
+          className="btn-base btn-primary w-full sm:w-auto sm:min-w-36"
           disabled={!canSubmitProfile}
           type="submit"
         >
@@ -334,7 +335,7 @@ function getInitial(value: string): string {
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="mt-3 block space-y-2 first:mt-0">
-      <span className="text-sm font-medium text-white/80">{label}</span>
+      <span className="field-label mb-0">{label}</span>
       {children}
     </label>
   );

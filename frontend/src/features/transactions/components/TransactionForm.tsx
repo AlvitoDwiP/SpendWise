@@ -38,21 +38,20 @@ export function TransactionForm({
       ? categories
       : categories.filter((category) => category.type === effectiveValues.type);
 
-  const highlightClass =
-    "border-amber-400/35 bg-amber-500/10 focus:border-amber-300/60 focus:ring-amber-400/25";
+  const highlightClass = "border-[rgba(216,168,95,0.28)] bg-[var(--accent-warning-soft)]";
 
   return (
     <div className="space-y-4">
       {helperText ? (
-        <p className="rounded-xl border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-xs font-medium text-amber-100">
+        <p className="alert-warning">
           {helperText}
         </p>
       ) : null}
 
       <label className="block">
-        <span className="mb-2 block text-sm font-medium text-white/75">Type</span>
+        <span className="field-label">Type</span>
         <select
-          className="w-full rounded-xl border border-white/10 bg-[#232326] px-4 py-2.5 text-sm text-white outline-none transition focus:border-purple-400/50 focus:ring-2 focus:ring-purple-400/25 disabled:cursor-not-allowed disabled:opacity-60"
+          className="input-base appearance-none"
           disabled={disabled}
           onChange={(event) =>
             onChange({
@@ -71,9 +70,9 @@ export function TransactionForm({
       </label>
 
       <label className="block">
-        <span className="mb-2 block text-sm font-medium text-white/75">Amount</span>
+        <span className="field-label">Amount</span>
         <input
-          className={`w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-purple-400/50 focus:ring-2 focus:ring-purple-400/25 disabled:cursor-not-allowed disabled:opacity-60 ${highlighted.has("amount") ? highlightClass : ""}`}
+          className={`input-base text-[18px] font-semibold tracking-[-0.02em] ${highlighted.has("amount") ? highlightClass : ""}`}
           disabled={disabled}
           inputMode="numeric"
           min="0"
@@ -95,9 +94,9 @@ export function TransactionForm({
       </label>
 
       <label className="block">
-        <span className="mb-2 block text-sm font-medium text-white/75">Category</span>
+        <span className="field-label">Category</span>
         <select
-          className={`w-full rounded-xl border border-white/10 bg-[#232326] px-4 py-2.5 text-sm text-white outline-none transition focus:border-purple-400/50 focus:ring-2 focus:ring-purple-400/25 disabled:cursor-not-allowed disabled:opacity-60 ${highlighted.has("categoryId") ? highlightClass : ""}`}
+          className={`input-base appearance-none ${highlighted.has("categoryId") ? highlightClass : ""}`}
           disabled={disabled}
           onChange={(event) =>
             onChange({ ...effectiveValues, categoryId: event.target.value })
@@ -115,10 +114,10 @@ export function TransactionForm({
       </label>
 
       <label className="block">
-        <span className="mb-2 block text-sm font-medium text-white/75">Date</span>
+        <span className="field-label">Date</span>
         <DatePicker
-          calendarClassName="!rounded-2xl !border !border-white/10 !bg-[#1c1c1e] !text-white !shadow-2xl"
-          className={`w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-purple-400/50 focus:ring-2 focus:ring-purple-400/25 disabled:cursor-not-allowed disabled:opacity-60 ${highlighted.has("date") ? highlightClass : ""}`}
+          calendarClassName="!rounded-[24px] !border !border-[var(--border-muted)] !bg-[var(--surface-base)] !text-[var(--text-primary)] !shadow-[0_18px_40px_rgba(0,0,0,0.18)]"
+          className={`input-base ${highlighted.has("date") ? highlightClass : ""}`}
           dateFormat="dd MMM yyyy"
           disabled={disabled}
           onChange={(date: Date | null) =>
@@ -135,9 +134,9 @@ export function TransactionForm({
       </label>
 
       <label className="block">
-        <span className="mb-2 block text-sm font-medium text-white/75">Note</span>
+        <span className="field-label">Note</span>
         <textarea
-          className={`min-h-[84px] w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-purple-400/50 focus:ring-2 focus:ring-purple-400/25 disabled:cursor-not-allowed disabled:opacity-60 ${highlighted.has("note") ? highlightClass : ""}`}
+          className={`input-base textarea-base ${highlighted.has("note") ? highlightClass : ""}`}
           disabled={disabled}
           onChange={(event) =>
             onChange({ ...effectiveValues, note: event.target.value })

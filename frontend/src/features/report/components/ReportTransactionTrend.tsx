@@ -14,12 +14,12 @@ export function ReportTransactionTrend({ items }: ReportTransactionTrendProps) {
   const peak = items.reduce((max, item) => Math.max(max, item.expense), 0);
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-[#1c1c1e]/85 p-4 shadow-xl shadow-black/15 backdrop-blur-xl">
-      <h2 className="text-lg font-semibold text-white">Expense Trend</h2>
-      <p className="mt-1 text-sm text-white/55">Simple trend from selected period.</p>
+    <section className="warm-panel-compact p-4">
+      <h2 className="section-title">Expense Trend</h2>
+      <p className="mt-1 text-sm text-[var(--text-secondary)]">Simple trend from selected period.</p>
 
       {items.length === 0 ? (
-        <p className="mt-5 rounded-xl border border-white/10 bg-white/5 px-3 py-4 text-sm text-white/55">
+        <p className="warm-elevated mt-5 px-3 py-4 text-sm text-[var(--text-secondary)]">
           Not enough data for trend.
         </p>
       ) : (
@@ -30,14 +30,14 @@ export function ReportTransactionTrend({ items }: ReportTransactionTrendProps) {
 
             return (
               <div className="flex min-w-0 flex-col items-center" key={item.key}>
-                <div className="flex h-24 w-full items-end justify-center rounded-lg bg-white/5 px-1 pb-1">
+                <div className="flex h-24 w-full items-end justify-center rounded-[14px] border border-[var(--border-muted)] bg-[var(--surface-input)] px-1 pb-1">
                   <div
-                    className="w-full rounded-md bg-gradient-to-t from-purple-500 to-indigo-400"
+                    className="w-full rounded-md bg-[linear-gradient(180deg,rgba(216,124,124,0.82),rgba(166,79,79,0.95))]"
                     style={{ height: `${height}%` }}
                     title={`${item.label}: ${formatCompactRupiah(item.expense)}`}
                   />
                 </div>
-                <p className="mt-2 w-full truncate text-center text-[11px] text-white/60">{item.label}</p>
+                <p className="mt-2 w-full truncate text-center text-[11px] text-[var(--text-secondary)]">{item.label}</p>
               </div>
             );
           })}

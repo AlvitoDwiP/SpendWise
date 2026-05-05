@@ -15,20 +15,20 @@ type BalanceStatsCardsProps = {
 const stats = [
   {
     key: "income",
-    tone: "text-green-400",
-    iconTone: "bg-green-500/20 text-green-400",
+    tone: "text-[var(--accent-green)]",
+    iconTone: "border border-[rgba(95,197,142,0.28)] bg-[var(--accent-green-soft)] text-[var(--accent-green)]",
     icon: TrendingUp,
   },
   {
     key: "expense",
-    tone: "text-red-400",
-    iconTone: "bg-red-500/20 text-red-400",
+    tone: "text-[var(--accent-red)]",
+    iconTone: "border border-[rgba(216,124,124,0.28)] bg-[var(--accent-red-soft)] text-[var(--accent-red)]",
     icon: BriefcaseBusiness,
   },
   {
     key: "transactions",
-    tone: "text-purple-300",
-    iconTone: "bg-purple-500/20 text-purple-300",
+    tone: "text-[var(--accent-purple)]",
+    iconTone: "border border-[rgba(169,155,232,0.28)] bg-[var(--accent-purple-soft)] text-[var(--accent-purple)]",
     icon: ListOrdered,
   },
 ] as const;
@@ -68,7 +68,7 @@ export function BalanceStatsCards({
 
         return (
           <motion.article
-            className="min-h-0 rounded-2xl border border-white/10 bg-white/5 p-3 shadow-xl shadow-black/20 backdrop-blur-xl transition-all md:min-h-36 md:p-5"
+            className="warm-panel-compact min-h-0 p-3 transition-all md:min-h-36 md:p-5"
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             key={item.key}
@@ -78,11 +78,11 @@ export function BalanceStatsCards({
             <div className={`mb-2 grid h-8 w-8 place-items-center rounded-xl ${item.iconTone} md:mb-5 md:h-12 md:w-12 md:rounded-2xl`}>
               <Icon className="h-4 w-4 md:h-6 md:w-6" />
             </div>
-            <p className="text-xs text-white/55 md:hidden">{mobileLabels[item.key]}</p>
-            <p className="hidden text-sm text-white/55 md:block">{labels[item.key]}</p>
-            <p className={`mt-1 text-sm font-semibold ${item.tone} md:mt-2 md:text-2xl`}>
+            <p className="eyebrow-label md:hidden">{mobileLabels[item.key]}</p>
+            <p className="eyebrow-label hidden md:block">{labels[item.key]}</p>
+            <p className={`mt-1 text-sm font-semibold ${item.tone} md:mt-2 md:font-normal`}>
               <span className="md:hidden">{compactValues[item.key]}</span>
-              <span className="hidden md:inline">{values[item.key]}</span>
+              <span className="metric-value hidden md:inline">{values[item.key]}</span>
             </p>
           </motion.article>
         );

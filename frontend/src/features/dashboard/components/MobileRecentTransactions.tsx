@@ -8,14 +8,24 @@ import { formatDate, formatRupiah } from "@/lib/format";
 import type { Transaction } from "@/types/transaction.types";
 
 type MobileRecentTransactionsProps = {
+  emptyActionHref?: string;
+  emptyActionLabel?: string;
+  emptyDescription?: string;
+  emptyTitle?: string;
   onDeleteTransaction: (transaction: Transaction) => void;
   onEditTransaction: (transaction: Transaction) => void;
+  seeAllHref?: string;
   transactions: Transaction[];
 };
 
 export function MobileRecentTransactions({
+  emptyActionHref,
+  emptyActionLabel,
+  emptyDescription = "No recent transactions yet.",
+  emptyTitle,
   onDeleteTransaction,
   onEditTransaction,
+  seeAllHref = "/transactions",
   transactions,
 }: MobileRecentTransactionsProps) {
   const visibleTransactions = transactions.slice(0, 4);
@@ -24,23 +34,33 @@ export function MobileRecentTransactions({
     <section className="px-7 md:hidden">
       <div className="rounded-[28px] border border-[var(--border-muted)] bg-[var(--surface-base)] p-5 shadow-[0_18px_40px_rgba(0,0,0,0.18)]">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold text-[var(--text-primary)]">Recent Transactions</h2>
-          <Link
-            className="text-sm font-medium text-[var(--accent-cream)] transition hover:text-[var(--text-primary)]"
-            href="/transactions"
-          >
-            See All
-          </Link>
+        <h2 className="text-lg font-semibold text-[var(--text-primary)]">Recent Transactions</h2>
+        <Link
+          className="text-sm font-medium text-[var(--accent-cream)] transition hover:text-[var(--text-primary)]"
+          href={seeAllHref}
+        >
+          See All
+        </Link>
         </div>
 
         <div className="mt-4 space-y-2.5">
-          {visibleTransactions.length === 0 ? (
-            <div className="rounded-[22px] border border-[var(--border-muted)] bg-[var(--surface-elevated)] px-4 py-10 text-center text-sm text-[var(--text-secondary)]">
-              No recent transactions yet.
-            </div>
-          ) : (
-            visibleTransactions.map((transaction, index) => (
-              <MobileTransactionRow
+        {visibleTransactions.length === 0 ? (
+          <div className="rounded-[22px] border border-[var(--border-muted)] bg-[var(--surface-elevated)] px-4 py-8 text-center font-sans">
+            {emptyTitle ? (
+              <p className="text-sm font-semibold text-[var(--text-primary)]">{emptyTitle}</p>
+            ) : null}
+            <p className={`text-sm text-[var(--text-secondary)] ${emptyTitle ? "mt-2" : ""}`}>
+              {emptyDescription}
+            </p>
+            {emptyActionHref && emptyActionLabel ? (
+              <Link className="auth-login-btn mx-auto mt-4 h-10 px-4 text-sm" href={emptyActionHref}>
+                {emptyActionLabel}
+              </Link>
+            ) : null}
+          </div>
+        ) : (
+          visibleTransactions.map((transaction, index) => (
+            <MobileTransactionRow
                 index={index}
                 key={transaction.id}
                 onDeleteTransaction={onDeleteTransaction}

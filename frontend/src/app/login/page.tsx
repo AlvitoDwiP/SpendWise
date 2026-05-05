@@ -1,13 +1,16 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { type CredentialResponse } from "@react-oauth/google";
 
+import { AuthBackdrop } from "@/features/auth/components/AuthBackdrop";
+import { AuthModal } from "@/features/auth/components/AuthModal";
 import { LoginForm } from "@/features/auth/components/LoginForm";
 import { googleLogin, login } from "@/features/auth/api";
+import { GuestDashboardPreview } from "@/features/dashboard/components/GuestDashboardPreview";
 import type { GoogleTokenPayload } from "@/features/auth/types";
-import { setToken } from "@/lib/api/client";
+import { getToken, setToken } from "@/lib/api/client";
 
 function decodeBase64Url(value: string): string {
   const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
@@ -37,6 +40,12 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (getToken()) {
+      router.replace("/dashboard");
+    }
+  }, [router]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -90,19 +99,24 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 px-6 py-12 text-slate-950">
-      <LoginForm
-        email={email}
-        error={error}
-        isGoogleLoginEnabled={isGoogleLoginEnabled}
-        isSubmitting={isSubmitting}
-        onEmailChange={setEmail}
-        onGoogleError={() => setError("Google login failed. Please try again.")}
-        onGoogleSuccess={handleGoogleSuccess}
-        onPasswordChange={setPassword}
-        onSubmit={handleSubmit}
-        password={password}
-      />
-    </main>
+    <>
+      <AuthBackdrop>
+        <GuestDashboardPreview />
+      </AuthBackdrop>
+      <AuthModal>
+        <LoginForm
+          email={email}
+          error={error}
+          isGoogleLoginEnabled={isGoogleLoginEnabled}
+          isSubmitting={isSubmitting}
+          onEmailChange={setEmail}
+          onGoogleError={() => setError("Google login failed. Please try again.")}
+          onGoogleSuccess={handleGoogleSuccess}
+          onPasswordChange={setPassword}
+          onSubmit={handleSubmit}
+          password={password}
+        />
+      </AuthModal>
+    </>
   );
 }

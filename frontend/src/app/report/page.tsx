@@ -234,13 +234,13 @@ export default function ReportPage() {
   function handleLogout() {
     logout();
     setIsDrawerOpen(false);
-    router.replace("/login");
+    router.replace("/dashboard");
   }
 
   const hasNoData = data.transactions.length === 0;
 
   return (
-    <main className="relative min-h-screen w-full max-w-full overflow-x-clip bg-[#0f0f10] text-white">
+    <main className="app-shell w-full max-w-full">
       <DashboardBackground />
 
       <div className="relative flex min-h-screen">
@@ -266,10 +266,11 @@ export default function ReportPage() {
             userName={data.user.name}
           />
 
-          <div className="mx-auto max-w-7xl space-y-4 md:space-y-6">
+          <div className="app-desktop-page max-w-[1200px] space-y-4 md:space-y-6">
             <section>
-              <h1 className="text-2xl font-semibold text-white md:text-3xl">Report</h1>
-              <p className="mt-1 text-sm text-white/60 md:text-base">
+              <p className="page-label">Reports</p>
+              <h1 className="page-title mt-3 md:text-[46px]">Report</h1>
+              <p className="page-subtitle mt-3 md:text-base">
                 Simple insights for your income and spending.
               </p>
             </section>

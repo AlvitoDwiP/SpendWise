@@ -1,24 +1,31 @@
 "use client";
-
 import { useState } from "react";
 
 type MobileDashboardHeaderProps = {
   greeting: string;
+  isGuest?: boolean;
   profilePhotoUrl?: string | null;
   userName: string;
 };
 
 export function MobileDashboardHeader({
   greeting,
+  isGuest = false,
   profilePhotoUrl,
   userName,
 }: MobileDashboardHeaderProps) {
   const [hasImageError, setHasImageError] = useState(false);
   const showProfilePhoto = Boolean(profilePhotoUrl) && !hasImageError;
+  const paddingTop = isGuest
+    ? "calc(env(safe-area-inset-top, 0px) + 6.25rem)"
+    : "calc(env(safe-area-inset-top, 0px) + 1.2rem)";
 
   return (
     <section className="md:hidden">
-      <div className="flex items-start justify-between gap-4 px-7 pt-[calc(env(safe-area-inset-top)+1.2rem)]">
+      <div
+        className="flex items-start justify-between gap-4 px-7"
+        style={{ paddingTop }}
+      >
         <div className="min-w-0">
           <p className="font-sans text-[14px] font-semibold uppercase leading-5 tracking-[0.28em] text-[var(--text-secondary)]">
             Dashboard

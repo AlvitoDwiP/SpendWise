@@ -82,7 +82,7 @@ export default function SettingsPage() {
   function handleLogout() {
     logout();
     setIsDrawerOpen(false);
-    router.replace("/login");
+    router.replace("/dashboard");
   }
 
   async function handleSaveProfile(payload: {
@@ -197,7 +197,7 @@ export default function SettingsPage() {
     : null;
 
   return (
-    <main className="relative min-h-screen w-full max-w-full overflow-x-clip bg-[#0f0f10] text-white">
+    <main className="app-shell w-full max-w-full">
       <DashboardBackground />
 
       <div className="relative flex min-h-screen">
@@ -224,17 +224,18 @@ export default function SettingsPage() {
             userName={user.name}
           />
 
-          <div className="mx-auto max-w-3xl space-y-6">
+          <div className="app-desktop-page max-w-3xl space-y-6">
             <section>
               <Link
-                className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-white/55 transition hover:text-purple-300"
+                className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)] transition hover:text-[var(--accent-cream)]"
                 href="/dashboard"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Dashboard
               </Link>
-              <h1 className="text-2xl font-semibold text-white md:text-3xl">Settings</h1>
-              <p className="mt-1 text-sm text-white/60 md:text-base">
+              <p className="page-label">More</p>
+              <h1 className="page-title mt-3 md:text-[46px]">Settings</h1>
+              <p className="page-subtitle mt-3 md:text-base">
                 Manage profile and account safety.
               </p>
             </section>

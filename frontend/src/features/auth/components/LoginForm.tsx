@@ -30,80 +30,85 @@ export function LoginForm({
   onSubmit,
 }: LoginFormProps) {
   return (
-    <section className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
-      <div className="mb-8">
-        <p className="text-sm font-medium text-emerald-700">SpendWise</p>
-        <h1 className="mt-2 text-2xl font-semibold">Sign in</h1>
-        <p className="mt-2 text-sm text-slate-600">
-          Continue to your spending dashboard.
+    <section className="auth-modal-content p-7 sm:p-9">
+      <div className="mb-8 pr-10">
+        <p className="auth-kicker">SpendWise</p>
+        <h1 className="auth-modal-title mt-3">Masuk ke SpendWise</h1>
+        <p className="auth-modal-description mt-3">
+          Kelola pemasukan, pengeluaran, dan laporan keuangan Anda dengan lebih tenang.
         </p>
       </div>
 
-      <form className="space-y-5" onSubmit={onSubmit}>
+      {isGoogleLoginEnabled ? (
+        <div className="auth-google-wrap mb-5">
+          <GoogleLogin
+            onError={onGoogleError}
+            onSuccess={onGoogleSuccess}
+            shape="pill"
+            size="large"
+            text="continue_with"
+            theme="filled_black"
+            width="100%"
+          />
+        </div>
+      ) : (
+        <button className="auth-social-btn mb-5 w-full" disabled type="button">
+          Lanjutkan dengan Google
+        </button>
+      )}
+
+      <div className="auth-divider">
+        <span />
+        <span>ATAU</span>
+        <span />
+      </div>
+
+      <form className="space-y-4" onSubmit={onSubmit}>
         <div>
-          <label className="mb-2 block text-sm font-medium text-slate-700" htmlFor="email">
-            Email
-          </label>
           <input
             autoComplete="email"
-            className="h-11 w-full rounded-md border border-slate-300 px-3 text-sm outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+            className="auth-input"
             id="email"
             name="email"
             onChange={(event) => onEmailChange(event.target.value)}
+            placeholder="Alamat email"
             type="email"
             value={email}
           />
         </div>
 
         <div>
-          <label className="mb-2 block text-sm font-medium text-slate-700" htmlFor="password">
-            Password
-          </label>
           <input
             autoComplete="current-password"
-            className="h-11 w-full rounded-md border border-slate-300 px-3 text-sm outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+            className="auth-input"
             id="password"
             name="password"
             onChange={(event) => onPasswordChange(event.target.value)}
+            placeholder="Kata sandi"
             type="password"
             value={password}
           />
         </div>
 
         {error ? (
-          <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          <p className="alert-error">
             {error}
           </p>
         ) : null}
 
         <button
-          className="h-11 w-full rounded-md bg-emerald-700 px-4 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+          className="auth-submit-btn w-full"
           disabled={isSubmitting}
           type="submit"
         >
-          {isSubmitting ? "Signing in..." : "Sign in"}
+          {isSubmitting ? "Memproses..." : "Masuk"}
         </button>
       </form>
-      <div className="my-4 flex items-center gap-3 text-xs text-slate-400">
-        <span className="h-px flex-1 bg-slate-200" />
-        <span>OR</span>
-        <span className="h-px flex-1 bg-slate-200" />
-      </div>
-      {isGoogleLoginEnabled ? (
-        <div className="flex justify-center">
-          <GoogleLogin onError={onGoogleError} onSuccess={onGoogleSuccess} text="continue_with" />
-        </div>
-      ) : (
-        <p className="text-center text-xs text-slate-500">
-          Google login is unavailable. Please configure{" "}
-          <code>NEXT_PUBLIC_GOOGLE_CLIENT_ID</code>.
-        </p>
-      )}
 
-      <p className="mt-6 text-center text-sm text-slate-600">
-        New to SpendWise?{" "}
-        <Link className="font-medium text-emerald-700" href="/register">
-          Create an account
+      <p className="mt-6 text-center font-sans text-sm text-[var(--text-secondary)]">
+        Belum punya akun?{" "}
+        <Link className="font-semibold text-[var(--accent-cream)]" href="/register">
+          Daftar
         </Link>
       </p>
     </section>

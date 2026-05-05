@@ -17,13 +17,13 @@ export function CategoryLoadingState() {
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
       {Array.from({ length: 6 }).map((_, index) => (
         <div
-          className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.055] p-4"
+          className="list-item flex items-center gap-4"
           key={index}
         >
-          <div className="h-14 w-14 animate-pulse rounded-2xl bg-white/10" />
+          <div className="skeleton-warm h-14 w-14 rounded-2xl" />
           <div className="flex-1 space-y-3">
-            <div className="h-4 w-2/3 animate-pulse rounded-full bg-white/10" />
-            <div className="h-3 w-1/2 animate-pulse rounded-full bg-white/5" />
+            <div className="skeleton-warm h-4 w-2/3 rounded-full" />
+            <div className="skeleton-warm h-3 w-1/2 rounded-full" />
           </div>
         </div>
       ))}
@@ -34,23 +34,23 @@ export function CategoryLoadingState() {
 export function CategoryEmptyState({ onAddClick }: CategoryEmptyStateProps) {
   return (
     <motion.section
-      className="rounded-3xl border border-dashed border-purple-300/20 bg-white/[0.045] p-8 text-center shadow-[0_24px_70px_rgba(0,0,0,0.24)] backdrop-blur-xl"
+      className="state-card text-center"
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.24, ease: "easeOut" }}
     >
-      <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-purple-500/15 text-purple-300">
+      <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl border border-[var(--border-muted)] bg-[var(--accent-purple-soft)] text-[var(--accent-purple)]">
         <FolderOpen className="h-8 w-8" />
       </div>
-      <h2 className="mt-5 text-xl font-semibold text-white">
+      <h2 className="mt-5 text-xl font-semibold text-[var(--text-primary)]">
         No categories yet
       </h2>
-      <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-white/55">
+      <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-[var(--text-secondary)]">
         Create income and expense categories so every transaction can be grouped
         clearly.
       </p>
       <button
-        className="mt-6 inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-500 to-indigo-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-purple-500/20 transition hover:scale-[1.02] active:scale-[0.98]"
+        className="btn-base btn-primary mt-6"
         onClick={onAddClick}
         type="button"
       >
@@ -67,23 +67,23 @@ export function CategoryErrorState({
 }: CategoryErrorStateProps) {
   return (
     <motion.section
-      className="rounded-3xl border border-red-400/20 bg-red-500/10 p-6 text-white shadow-[0_24px_70px_rgba(0,0,0,0.24)] backdrop-blur-xl"
+      className="state-card state-card-danger"
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.24, ease: "easeOut" }}
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-red-500/15 text-red-300">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl border border-[rgba(216,124,124,0.28)] bg-[var(--accent-red-soft)] text-[var(--accent-red)]">
             <AlertCircle className="h-5 w-5" />
           </span>
           <div>
-            <p className="font-semibold text-red-100">Categories unavailable</p>
-            <p className="mt-1 text-sm leading-6 text-red-100/65">{message}</p>
+            <p className="font-semibold text-[var(--accent-red)]">Categories unavailable</p>
+            <p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">{message}</p>
           </div>
         </div>
         <button
-          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/15"
+          className="btn-base btn-secondary"
           onClick={onRetry}
           type="button"
         >

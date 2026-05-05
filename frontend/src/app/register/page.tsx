@@ -1,10 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
+import { AuthBackdrop } from "@/features/auth/components/AuthBackdrop";
+import { AuthModal } from "@/features/auth/components/AuthModal";
 import { RegisterForm } from "@/features/auth/components/RegisterForm";
 import { register } from "@/features/auth/api";
+import { GuestDashboardPreview } from "@/features/dashboard/components/GuestDashboardPreview";
+import { getToken } from "@/lib/api/client";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -13,6 +17,12 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (getToken()) {
+      router.replace("/dashboard");
+    }
+  }, [router]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -45,18 +55,23 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 px-6 py-12 text-slate-950">
-      <RegisterForm
-        email={email}
-        error={error}
-        isSubmitting={isSubmitting}
-        name={name}
-        onEmailChange={setEmail}
-        onNameChange={setName}
-        onPasswordChange={setPassword}
-        onSubmit={handleSubmit}
-        password={password}
-      />
-    </main>
+    <>
+      <AuthBackdrop>
+        <GuestDashboardPreview />
+      </AuthBackdrop>
+      <AuthModal>
+        <RegisterForm
+          email={email}
+          error={error}
+          isSubmitting={isSubmitting}
+          name={name}
+          onEmailChange={setEmail}
+          onNameChange={setName}
+          onPasswordChange={setPassword}
+          onSubmit={handleSubmit}
+          password={password}
+        />
+      </AuthModal>
+    </>
   );
 }

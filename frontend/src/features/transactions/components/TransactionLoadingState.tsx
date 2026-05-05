@@ -6,7 +6,7 @@ export function TransactionLoadingState() {
       {Array.from({ length: 5 }).map((_, i) => (
         <div
           key={i}
-          className="h-16 rounded-xl bg-gradient-to-r from-slate-700/30 to-slate-700/50 animate-pulse"
+          className="skeleton-warm h-[88px] rounded-[22px] border border-[var(--border-muted)]"
         />
       ))}
     </div>

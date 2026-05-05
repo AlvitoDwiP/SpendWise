@@ -225,7 +225,7 @@ export function AddTransactionModal({ onClose, onCreated }: AddTransactionModalP
     <div className="fixed inset-0 z-50 grid place-items-end px-4 pb-4 sm:place-items-center sm:p-6">
       <motion.button
         aria-label="Close add transaction modal"
-        className="absolute inset-0 bg-black/55 backdrop-blur-sm"
+        className="modal-overlay"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
             onClick={() => {
@@ -238,22 +238,26 @@ export function AddTransactionModal({ onClose, onCreated }: AddTransactionModalP
 
       <motion.section
         aria-modal="true"
-        className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-3xl border border-white/10 bg-[#1c1c1e]/95 p-5 text-white shadow-[0_24px_80px_rgba(0,0,0,0.45)] backdrop-blur-xl sm:p-6"
+        className="modal-panel"
         initial={{ opacity: 0, y: 16, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         role="dialog"
         transition={{ duration: 0.22, ease: "easeOut" }}
       >
+        <div className="modal-handle" />
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-lg font-semibold">Add Transaction</p>
-            <p className="mt-1 text-sm leading-6 text-white/55">
+            <p className="page-label">Add Transaction</p>
+            <p className="mt-3 text-[30px] leading-[1.05] tracking-[-0.04em] text-[var(--text-primary)]" style={{ fontFamily: "var(--font-serif)" }}>
+              Add Transaction
+            </p>
+            <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">
               Add manually or use receipt-assisted input before saving.
             </p>
           </div>
           <button
             aria-label="Close modal"
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/10 bg-white/10 text-white/70 transition hover:bg-white/15 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+            className="icon-button shrink-0 rounded-full disabled:cursor-not-allowed disabled:opacity-50"
             disabled={isSubmitting || isScanning}
             onClick={handleCloseModal}
             type="button"
@@ -262,12 +266,12 @@ export function AddTransactionModal({ onClose, onCreated }: AddTransactionModalP
           </button>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-2 rounded-2xl border border-white/10 bg-white/5 p-1">
+        <div className="mt-5 grid grid-cols-2 gap-2 rounded-[22px] border border-[var(--border-muted)] bg-[var(--surface-input)] p-1">
           <button
-            className={`rounded-xl px-3 py-2 text-sm font-semibold transition ${
+            className={`btn-base min-h-[46px] rounded-[18px] px-3 text-sm ${
               mode === "manual"
-                ? "bg-purple-500/20 text-purple-200"
-                : "text-white/70 hover:bg-white/10"
+                ? "chip-active-purple border border-[rgba(169,155,232,0.28)]"
+                : "border border-transparent bg-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-base)]"
             }`}
             disabled={isSubmitting || isScanning}
             onClick={() => setMode("manual")}
@@ -276,10 +280,10 @@ export function AddTransactionModal({ onClose, onCreated }: AddTransactionModalP
             Manual
           </button>
           <button
-            className={`inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition ${
+            className={`btn-base min-h-[46px] rounded-[18px] px-3 text-sm ${
               mode === "scan"
-                ? "bg-purple-500/20 text-purple-200"
-                : "text-white/70 hover:bg-white/10"
+                ? "chip-active-purple border border-[rgba(169,155,232,0.28)]"
+                : "border border-transparent bg-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-base)]"
             }`}
             disabled={isSubmitting || isScanning}
             onClick={() => setMode("scan")}
@@ -291,7 +295,7 @@ export function AddTransactionModal({ onClose, onCreated }: AddTransactionModalP
         </div>
 
         {categoriesError ? (
-          <p className="mt-4 rounded-xl border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
+          <p className="alert-error mt-4">
             {categoriesError}
           </p>
         ) : null}
@@ -299,18 +303,18 @@ export function AddTransactionModal({ onClose, onCreated }: AddTransactionModalP
         {scanSuggestionNotice ? (
           <div className="mt-4 space-y-2">
             {scanConfidence !== null ? (
-              <div className="inline-flex rounded-full border border-sky-300/35 bg-sky-500/10 px-2.5 py-1 text-xs font-medium text-sky-100">
+              <div className="chip-base chip-active-cream min-h-[32px] px-3 text-xs">
                 {toConfidenceLabel(scanConfidence)} confidence
               </div>
             ) : null}
-            <p className="rounded-xl border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
+            <p className="alert-warning">
               {scanSuggestionNotice}
             </p>
           </div>
         ) : null}
 
         {error ? (
-          <p className="mt-4 rounded-xl border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
+          <p className="alert-error mt-4">
             {error}
           </p>
         ) : null}
@@ -341,14 +345,14 @@ export function AddTransactionModal({ onClose, onCreated }: AddTransactionModalP
           )}
 
           {hasAmountError ? (
-            <p className="rounded-xl border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
+            <p className="alert-warning">
               Amount harus diisi lebih dari 0 sebelum disimpan.
             </p>
           ) : null}
 
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <button
-              className="inline-flex items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white/80 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+              className="btn-base btn-secondary disabled:cursor-not-allowed disabled:opacity-50"
               disabled={isSubmitting || isScanning}
               onClick={handleCloseModal}
               type="button"
@@ -356,7 +360,7 @@ export function AddTransactionModal({ onClose, onCreated }: AddTransactionModalP
               Cancel
             </button>
             <button
-              className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-purple-500 to-indigo-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-purple-500/20 transition hover:scale-[1.01] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+              className="btn-base btn-primary disabled:cursor-not-allowed disabled:opacity-60"
               disabled={
                 mode !== "manual" ||
                 isSubmitting ||

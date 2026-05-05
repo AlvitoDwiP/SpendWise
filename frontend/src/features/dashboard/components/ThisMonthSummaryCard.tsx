@@ -22,9 +22,9 @@ export function ThisMonthSummaryCard({
   const avgMonthly = activeMonthExpense > 0 ? activeMonthExpense : totalExpenseAllTime;
 
   return (
-    <section className={`rounded-2xl border border-white/10 bg-white/5 shadow-2xl shadow-black/20 backdrop-blur-xl ${compact ? "p-4" : "p-5 sm:p-6"}`}>
-      <h2 className="text-xl font-semibold text-white">Spending Insights</h2>
-      <p className="mt-1 text-sm text-white/55">Short window averages for quick decisions.</p>
+    <section className={`warm-panel-compact ${compact ? "p-4" : "p-5 sm:p-6"}`}>
+      <h2 className="font-sans text-lg font-semibold text-[var(--text-primary)]">Spending Insights</h2>
+      <p className="mt-1 font-sans text-sm text-[var(--text-secondary)]">Short window averages for quick decisions.</p>
       <div className={`space-y-3 ${compact ? "mt-4" : "mt-5"}`}>
         <SummaryRow hint="Last 7 days" label="Avg daily spend" tone="expense" value={avgDaily} />
         <SummaryRow hint="Last 4 weeks" label="Avg weekly spend" tone="expense" value={avgWeekly} />
@@ -47,12 +47,12 @@ function SummaryRow({
   value: number;
 }) {
   return (
-    <div className="flex items-center justify-between border-b border-white/5 pb-3 text-sm text-white/60">
+    <div className="flex items-center justify-between border-b border-[rgba(59,52,43,0.75)] pb-3 font-sans text-sm text-[var(--text-secondary)]">
       <div>
         <p>{label}</p>
-        {hint ? <p className="mt-0.5 text-[11px] text-white/35">{hint}</p> : null}
+        {hint ? <p className="mt-0.5 font-sans text-xs text-[var(--text-muted)]">{hint}</p> : null}
       </div>
-      <span className={`font-semibold ${tone === "income" ? "text-emerald-400" : "text-red-400"}`}>
+      <span className={`font-sans text-sm font-semibold ${tone === "income" ? "text-[var(--accent-green)]" : "text-[var(--accent-red)]"}`}>
         {formatRupiah(Number.isFinite(value) ? value : 0)}
       </span>
     </div>

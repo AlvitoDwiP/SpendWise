@@ -16,17 +16,17 @@ const options: Array<{ label: string; value: ReportPeriod }> = [
 
 export function ReportPeriodFilter({ period, onChange }: ReportPeriodFilterProps) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-2 backdrop-blur-xl">
+    <div className="warm-panel-compact p-2">
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {options.map((option) => {
           const active = period === option.value;
 
           return (
             <button
-              className={`rounded-xl px-3 py-2 text-sm font-medium transition ${
+              className={`chip-base min-h-[44px] rounded-[16px] px-3 text-sm ${
                 active
-                  ? "bg-purple-500/20 text-purple-200"
-                  : "text-white/65 hover:bg-white/10 hover:text-white"
+                  ? "chip-active-cream"
+                  : ""
               }`}
               key={option.value}
               onClick={() => onChange(option.value)}

@@ -19,18 +19,12 @@ export function AppFooter() {
   );
   const currentYear = new Date().getFullYear();
 
-  if (usesMobileNav) {
+  if (usesMobileNav || isAuthRoute) {
     return null;
   }
 
   return (
-    <footer
-      className={
-        isAuthRoute
-          ? "border-t border-slate-200 bg-white px-4 py-3 text-center text-xs text-slate-500"
-          : "border-t border-white/10 bg-[#1c1c1e]/85 px-4 py-3 text-center text-xs text-white/45 backdrop-blur-xl"
-      }
-    >
+    <footer className="border-t border-[var(--border-muted)] bg-[var(--surface-base)] px-4 py-3 text-center text-xs text-[var(--text-muted)]">
       SpendWise © {currentYear}
     </footer>
   );

@@ -36,7 +36,7 @@ export function DashboardNavbar({
       <div className="flex min-w-0 items-center gap-4">
         <motion.button
           aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
-          className="grid h-14 w-14 shrink-0 place-items-center rounded-full border border-white/10 bg-white/5 text-white shadow-xl shadow-black/20 backdrop-blur-md transition hover:bg-white/10"
+          className="grid h-14 w-14 shrink-0 place-items-center rounded-full border border-[var(--border-muted)] bg-[var(--surface-base)] text-[#c8bba8] shadow-[0_18px_40px_rgba(0,0,0,0.18)] transition hover:bg-[var(--surface-elevated)]"
           onClick={onMenuClick}
           type="button"
           whileHover={{ scale: 1.04 }}
@@ -47,7 +47,7 @@ export function DashboardNavbar({
 
         <div className="min-w-0">
           <div className="mb-1 flex items-center gap-3">
-            <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full border border-white/10 bg-white/10 text-xs font-semibold text-white">
+            <div className="avatar-shell grid h-10 w-10 shrink-0 place-items-center text-xs font-semibold text-[var(--text-primary)]">
               {profilePhotoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -59,11 +59,11 @@ export function DashboardNavbar({
                 getInitial(userName)
               )}
             </div>
-            <h1 className="truncate text-2xl font-semibold text-white">
+            <h1 className="display-greeting truncate">
               {greeting}, {userName}
             </h1>
           </div>
-          <p className="mt-1 max-w-xl text-sm leading-6 text-white/60">
+          <p className="mt-1 max-w-xl font-sans text-[16px] leading-6 text-[var(--text-secondary)]">
             Take full control of your financial future starting today.
           </p>
         </div>
@@ -72,15 +72,15 @@ export function DashboardNavbar({
       <div className="flex items-center gap-4">
         {monthOptions.length > 0 && onMonthChange && selectedMonthKey ? (
           <div className="relative">
-            <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/60" />
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/50" />
+            <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#c8bba8]" />
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
             <select
-              className="h-[42px] min-w-[190px] appearance-none rounded-xl border border-white/10 bg-white/5 pl-9 pr-9 text-sm font-medium text-white/80 outline-none backdrop-blur-md transition hover:bg-white/10 focus:border-purple-400/40"
+              className="h-[44px] min-w-[190px] appearance-none rounded-2xl border border-[var(--border-muted)] bg-[var(--surface-raised)] pl-9 pr-9 text-sm font-medium text-[#c8bba8] outline-none transition hover:bg-[var(--surface-base)] focus:border-[var(--border-active)]"
               onChange={(event) => onMonthChange(event.target.value)}
               value={selectedMonthKey}
             >
               {monthOptions.map((option) => (
-                <option className="bg-[#1c1c1e] text-white" key={option.key} value={option.key}>
+                <option className="bg-[#211d18] text-white" key={option.key} value={option.key}>
                   {option.label}
                 </option>
               ))}
@@ -89,13 +89,13 @@ export function DashboardNavbar({
         ) : null}
 
         <motion.button
-          className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-purple-500/20"
+          className="btn-base btn-primary rounded-2xl px-5"
           onClick={onAddTransaction}
           type="button"
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.96 }}
         >
-          <Plus className="h-5 w-5" />
+          <Plus className="h-5 w-5 text-[#181410]" />
           <span>Add</span>
         </motion.button>
       </div>

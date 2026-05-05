@@ -54,8 +54,8 @@ export function TransactionItem({
   onDelete,
 }: TransactionItemProps) {
   const isIncome = transaction.type === "income";
-  const amountColor = isIncome ? "text-green-400" : "text-red-400";
-  const fallbackColor = isIncome ? "#22c55e" : "#fb7185";
+  const amountColor = isIncome ? "text-[var(--accent-green)]" : "text-[var(--accent-red)]";
+  const fallbackColor = isIncome ? "#5fc58e" : "#d87c7c";
   const safeCategoryName = category?.name ?? transaction.category?.name ?? "Uncategorized";
   const rawIcon = category?.icon ?? transaction.category?.icon ?? "";
   const Icon = iconMap[rawIcon.toLowerCase()];
@@ -66,7 +66,7 @@ export function TransactionItem({
 
   return (
     <div
-      className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.055] p-4 shadow-[0_14px_35px_rgba(0,0,0,0.18)] backdrop-blur-xl transition hover:border-purple-400/30 hover:bg-white/[0.075] sm:gap-4"
+      className="list-item flex items-center gap-3 transition hover:border-[var(--border-active)] hover:bg-[var(--surface-elevated)] sm:gap-4"
       onClick={() => onEdit(transaction)}
       role="button"
       tabIndex={0}
@@ -78,7 +78,7 @@ export function TransactionItem({
       }}
     >
       <div
-        className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border text-white"
+        className="grid h-12 w-12 shrink-0 place-items-center rounded-[18px] border text-white"
         style={{
           backgroundColor: `${color}24`,
           borderColor: `${color}55`,
@@ -89,8 +89,8 @@ export function TransactionItem({
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-white sm:text-base">{topText}</p>
-        <p className="mt-1 truncate text-xs text-white/55 sm:text-sm">{safeCategoryName}</p>
+        <p className="truncate text-sm font-semibold text-[var(--text-primary)] sm:text-base">{topText}</p>
+        <p className="mt-1 truncate text-xs text-[var(--text-secondary)] sm:text-sm">{safeCategoryName}</p>
       </div>
 
       <div className="flex shrink-0 flex-col items-end gap-1">
@@ -99,12 +99,12 @@ export function TransactionItem({
           {isIncome ? "+" : "-"}
           {formatRupiah(transaction.amount)}
         </p>
-        <p className="text-xs text-white/40">{formatDate(transaction.transaction_date)}</p>
+        <p className="text-xs text-[var(--text-muted)]">{formatDate(transaction.transaction_date)}</p>
       </div>
 
       <div className="ml-2 flex shrink-0 items-center gap-1">
         <button
-          className="grid h-9 w-9 place-items-center rounded-xl border border-white/10 bg-white/5 text-white/70 transition hover:border-purple-400/40 hover:bg-white/10 hover:text-white"
+          className="icon-button h-9 w-9 rounded-[14px]"
           onClick={(event) => {
             event.stopPropagation();
             onEdit(transaction);
@@ -115,7 +115,7 @@ export function TransactionItem({
           <Pencil size={16} />
         </button>
         <button
-          className="grid h-9 w-9 place-items-center rounded-xl border border-rose-400/20 bg-rose-500/10 text-rose-200 transition hover:bg-rose-500/20"
+          className="icon-button icon-button-danger h-9 w-9 rounded-[14px]"
           onClick={(event) => {
             event.stopPropagation();
             onDelete(transaction);

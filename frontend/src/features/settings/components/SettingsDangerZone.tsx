@@ -36,13 +36,14 @@ export function SettingsDangerZone({ onReset }: SettingsDangerZoneProps) {
   }
 
   return (
-    <section className="rounded-2xl border border-red-500/35 bg-red-500/10 p-4 shadow-2xl shadow-black/20 backdrop-blur-xl sm:p-6">
-      <h2 className="text-xl font-semibold text-red-200">Danger Zone</h2>
-      <p className="mt-1 text-sm text-red-100/85">This action cannot be undone.</p>
+    <section className="state-card state-card-danger sm:p-6">
+      <p className="page-label text-[var(--accent-red)]">Danger Zone</p>
+      <h2 className="mt-3 text-2xl font-semibold text-[var(--accent-red)]">Danger Zone</h2>
+      <p className="mt-1 text-sm text-[var(--text-secondary)]">This action cannot be undone.</p>
 
       <div className="mt-4">
         <button
-          className="h-11 rounded-xl bg-red-500/80 px-4 text-sm font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
+          className="btn-base btn-danger disabled:cursor-not-allowed disabled:opacity-60"
           onClick={() => {
             setError("");
             setIsOpen(true);
@@ -53,14 +54,14 @@ export function SettingsDangerZone({ onReset }: SettingsDangerZoneProps) {
         </button>
       </div>
 
-      {error ? <p className="mt-3 text-sm text-red-200">{error}</p> : null}
-      {success ? <p className="mt-3 text-sm text-emerald-200">{success}</p> : null}
+      {error ? <p className="alert-error mt-3">{error}</p> : null}
+      {success ? <p className="alert-success mt-3">{success}</p> : null}
 
       {isOpen ? (
         <div className="fixed inset-0 z-50 grid place-items-center p-4">
           <button
             aria-label="Close reset modal"
-            className="absolute inset-0 bg-black/55"
+            className="modal-overlay"
             onClick={() => {
               if (!isResetting) {
                 setIsOpen(false);
@@ -68,14 +69,15 @@ export function SettingsDangerZone({ onReset }: SettingsDangerZoneProps) {
             }}
             type="button"
           />
-          <div className="relative z-10 w-full max-w-md rounded-2xl border border-red-500/30 bg-[#1d1416] p-5 shadow-2xl shadow-black/50">
-            <h3 className="text-lg font-semibold text-red-100">Confirm Reset Data</h3>
-            <p className="mt-2 text-sm text-red-100/85">
+          <div className="modal-panel relative z-10 max-w-md">
+            <div className="modal-handle" />
+            <h3 className="text-lg font-semibold text-[var(--accent-red)]">Confirm Reset Data</h3>
+            <p className="mt-2 text-sm text-[var(--text-secondary)]">
               Type <span className="font-semibold text-white">RESET</span> to continue.
             </p>
 
             <input
-              className="mt-4 h-11 w-full rounded-xl border border-red-400/30 bg-black/20 px-3 text-sm text-white outline-none transition placeholder:text-white/40 focus:border-red-300/70 focus:ring-2 focus:ring-red-400/30"
+              className="input-base mt-4 border-[rgba(216,124,124,0.28)]"
               onChange={(event) => setConfirmText(event.target.value)}
               placeholder="Type RESET"
               value={confirmText}
@@ -83,7 +85,7 @@ export function SettingsDangerZone({ onReset }: SettingsDangerZoneProps) {
 
             <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-end">
               <button
-                className="h-11 rounded-xl border border-white/15 px-4 text-sm font-medium text-white/85"
+                className="btn-base btn-secondary"
                 onClick={() => {
                   if (!isResetting) {
                     setIsOpen(false);
@@ -94,7 +96,7 @@ export function SettingsDangerZone({ onReset }: SettingsDangerZoneProps) {
                 Cancel
               </button>
               <button
-                className="h-11 rounded-xl bg-red-500/90 px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                className="btn-base btn-danger disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={!canConfirm}
                 onClick={handleConfirm}
                 type="button"

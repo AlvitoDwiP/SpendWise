@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { CalendarDays, ChevronDown, Menu, Plus, TrendingDown, TrendingUp } from "lucide-react";
 
+import { AuthButtons } from "@/components/auth/AuthButtons";
 import { BalanceHeroCard } from "@/features/dashboard/components/BalanceHeroCard";
 import { BalanceStatsCards } from "@/features/dashboard/components/BalanceStatsCards";
 import { DashboardBackground } from "@/features/dashboard/components/DashboardBackground";
@@ -67,13 +68,33 @@ export default function DashboardPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedMonthKey, setSelectedMonthKey] = useState("");
+  const isAuthenticated = Boolean(getToken());
+  const isGuest = !isAuthenticated;
 
   useEffect(() => {
     let isMounted = true;
 
     async function loadDashboard() {
-      if (!getToken()) {
-        router.replace("/login");
+      if (!isAuthenticated) {
+        if (isMounted) {
+          setDashboard({
+            allTransactions: [],
+            recentTransactions: [],
+            summary: {
+              current_balance: 0,
+              this_month_expense: 0,
+              this_month_income: 0,
+              this_month_transaction_count: 0,
+            },
+            user: {
+              email: "",
+              id: 0,
+              name: "Guest",
+              profile_photo_url: null,
+            },
+          });
+          setIsLoading(false);
+        }
         return;
       }
 
@@ -121,7 +142,7 @@ export default function DashboardPage() {
     return () => {
       isMounted = false;
     };
-  }, [router]);
+  }, [isAuthenticated, router]);
 
   const greeting = useMemo(() => getGreeting(), []);
 
@@ -263,6 +284,11 @@ export default function DashboardPage() {
   }
 
   async function handleDeleteTransaction() {
+    if (isGuest) {
+      router.push("/login");
+      return;
+    }
+
     if (!deletingTransaction) {
       return;
     }
@@ -300,7 +326,7 @@ export default function DashboardPage() {
   function handleLogout() {
     logout();
     setIsDrawerOpen(false);
-    router.replace("/login");
+    router.replace("/dashboard");
   }
 
   if (isLoading) {
@@ -324,6 +350,7 @@ export default function DashboardPage() {
   return (
     <main className="relative min-h-screen w-full max-w-full overflow-x-clip bg-[var(--background)] text-[var(--text-primary)]">
       <DashboardBackground />
+      {isGuest ? <AuthButtons className="guest-mobile-auth-actions md:hidden" mobile /> : null}
 
       <motion.div
         className="relative flex min-h-screen"
@@ -340,7 +367,7 @@ export default function DashboardPage() {
               style={{ transformOrigin: "left center" }}
               className="hidden md:block md:pb-12 md:pl-8 md:pt-0"
             >
-              <DashboardSidebarCard onLogout={handleLogout} />
+              <DashboardSidebarCard isAuthenticated={isAuthenticated} onLogout={handleLogout} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -349,6 +376,7 @@ export default function DashboardPage() {
           <div className="space-y-5 pb-2 md:hidden">
             <MobileDashboardHeader
               greeting={greeting}
+              isGuest={isGuest}
               profilePhotoUrl={resolvedProfilePhotoUrl}
               userName={user.name}
             />
@@ -390,11 +418,30 @@ export default function DashboardPage() {
               />
             </section>
             <MobileRecentTransactions
+              emptyActionHref={isGuest ? "/login" : undefined}
+              emptyActionLabel={isGuest ? "Masuk" : undefined}
+              emptyDescription={
+                isGuest
+                  ? "Masuk untuk mulai mencatat pemasukan dan pengeluaran."
+                  : "No recent transactions yet."
+              }
+              emptyTitle={isGuest ? "Belum ada transaksi" : undefined}
               onDeleteTransaction={(transaction) => {
+                if (isGuest) {
+                  router.push("/login");
+                  return;
+                }
                 setDeleteTransactionError("");
                 setDeletingTransaction(transaction);
               }}
-              onEditTransaction={(transaction) => setEditingTransaction(transaction)}
+              onEditTransaction={(transaction) => {
+                if (isGuest) {
+                  router.push("/login");
+                  return;
+                }
+                setEditingTransaction(transaction);
+              }}
+              seeAllHref={isGuest ? "/login" : "/transactions"}
               transactions={recentTransactions}
             />
           </div>
@@ -410,7 +457,7 @@ export default function DashboardPage() {
               <div className="md:flex md:items-start md:gap-3">
                 <motion.button
                   aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
-                  className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-white/10 bg-white/5 text-white shadow-xl shadow-black/20 backdrop-blur-md transition hover:bg-white/10"
+                  className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[var(--border-muted)] bg-[var(--surface-base)] text-[#c8bba8] shadow-[0_18px_40px_rgba(0,0,0,0.18)] transition hover:bg-[var(--surface-elevated)]"
                   onClick={() => setIsSidebarOpen((value) => !value)}
                   type="button"
                   whileHover={{ scale: 1.04 }}
@@ -419,8 +466,13 @@ export default function DashboardPage() {
                   <Menu className="h-5 w-5" />
                 </motion.button>
                 <div className="min-w-0">
+                  {isGuest ? (
+                    <div className="mb-3">
+                      <AuthButtons />
+                    </div>
+                  ) : null}
                   <div className="mb-2 flex items-center gap-3">
-                    <div className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full border border-white/10 bg-white/10 text-xs font-semibold text-white">
+                    <div className="avatar-shell grid h-9 w-9 shrink-0 place-items-center text-xs font-semibold text-[var(--text-primary)]">
                       {resolvedProfilePhotoUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -432,11 +484,11 @@ export default function DashboardPage() {
                         getInitial(user.name)
                       )}
                     </div>
-                    <h1 className="truncate text-2xl font-semibold text-white">
+                    <h1 className="display-greeting truncate">
                       {greeting}, {user.name}
                     </h1>
                   </div>
-                  <p className="max-w-xl text-sm leading-6 text-white/60">
+                  <p className="max-w-xl font-sans text-[16px] leading-6 text-[var(--text-secondary)]">
                     Take full control of your financial future starting today.
                   </p>
                 </div>
@@ -460,31 +512,37 @@ export default function DashboardPage() {
             </div>
 
             <div className="hidden min-w-0 space-y-5 md:block">
-              <section className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-xl shadow-black/20 backdrop-blur-xl">
+              <section className="warm-panel-compact p-4">
                 <div className="flex items-center gap-3">
                   <div className="relative min-w-0 flex-1">
-                    <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/60" />
-                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/50" />
+                    <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#c8bba8]" />
+                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
                     <select
-                      className="h-[42px] w-full appearance-none rounded-xl border border-white/10 bg-white/5 pl-9 pr-9 text-sm font-medium text-white/80 outline-none backdrop-blur-md transition hover:bg-white/10 focus:border-purple-400/40"
+                      className="h-[44px] w-full appearance-none rounded-2xl border border-[var(--border-muted)] bg-[var(--surface-raised)] pl-9 pr-9 text-sm font-medium text-[#c8bba8] outline-none transition hover:bg-[var(--surface-base)] focus:border-[var(--border-active)]"
                       onChange={(event) => setSelectedMonthKey(event.target.value)}
                       value={effectiveSelectedMonthKey}
                     >
                       {monthOptions.map((option) => (
-                        <option className="bg-[#1c1c1e] text-white" key={option.key} value={option.key}>
+                        <option className="bg-[#211d18] text-white" key={option.key} value={option.key}>
                           {option.label}
                         </option>
                       ))}
                     </select>
                   </div>
                   <motion.button
-                    className="flex h-[42px] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 px-4 text-sm font-semibold text-white shadow-lg shadow-purple-500/20"
-                    onClick={() => setIsAddTransactionOpen(true)}
+                    className="btn-base btn-primary h-[44px] rounded-2xl px-4"
+                    onClick={() => {
+                      if (isGuest) {
+                        router.push("/login");
+                        return;
+                      }
+                      setIsAddTransactionOpen(true);
+                    }}
                     type="button"
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.96 }}
                   >
-                    <Plus className="h-4 w-4" />
+                    <Plus className="h-4 w-4 text-[#181410]" />
                     <span>Add</span>
                   </motion.button>
                 </div>
@@ -498,11 +556,30 @@ export default function DashboardPage() {
                 totalExpenseLast7Days={rollingExpense.last7Days}
               />
               <RecentTransactionsCard
+                emptyActionHref={isGuest ? "/login" : undefined}
+                emptyActionLabel={isGuest ? "Masuk" : undefined}
+                emptyDescription={
+                  isGuest
+                    ? "Masuk untuk mulai mencatat pemasukan dan pengeluaran."
+                    : "No recent transactions yet."
+                }
+                emptyTitle={isGuest ? "Belum ada transaksi" : undefined}
                 onDeleteTransaction={(transaction) => {
+                  if (isGuest) {
+                    router.push("/login");
+                    return;
+                  }
                   setDeleteTransactionError("");
                   setDeletingTransaction(transaction);
                 }}
-                onEditTransaction={(transaction) => setEditingTransaction(transaction)}
+                onEditTransaction={(transaction) => {
+                  if (isGuest) {
+                    router.push("/login");
+                    return;
+                  }
+                  setEditingTransaction(transaction);
+                }}
+                seeAllHref={isGuest ? "/login" : "/transactions"}
                 transactions={recentTransactions}
               />
             </div>
@@ -511,15 +588,23 @@ export default function DashboardPage() {
       </motion.div>
 
       <MobileBottomNav
-        onAddTransaction={() => setIsAddTransactionOpen(true)}
+        isAuthenticated={isAuthenticated}
+        onAddTransaction={() => {
+          if (isGuest) {
+            router.push("/login");
+            return;
+          }
+          setIsAddTransactionOpen(true);
+        }}
         onLogout={handleLogout}
       />
       <DashboardDrawer
+        isAuthenticated={isAuthenticated}
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
         onLogout={handleLogout}
       />
-      {isAddTransactionOpen ? (
+      {isAddTransactionOpen && !isGuest ? (
         <AddTransactionModal
           onClose={() => setIsAddTransactionOpen(false)}
           onCreated={(createdTransaction) => {
@@ -566,7 +651,7 @@ export default function DashboardPage() {
           transaction={editingTransaction}
         />
       ) : null}
-      {deletingTransaction ? (
+      {deletingTransaction && !isGuest ? (
         <DeleteTransactionConfirmModal
           error={deleteTransactionError}
           isDeleting={isDeletingTransaction}

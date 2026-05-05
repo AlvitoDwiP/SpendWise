@@ -74,7 +74,7 @@ export function EditCategoryModal({
         <div className="fixed inset-0 z-50 grid place-items-end px-4 pb-4 sm:place-items-center sm:p-6">
           <motion.button
             aria-label="Close edit category modal"
-            className="absolute inset-0 bg-black/55 backdrop-blur-sm"
+            className="modal-overlay"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -88,24 +88,28 @@ export function EditCategoryModal({
 
           <motion.section
             aria-modal="true"
-            className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-3xl border border-white/10 bg-[#1c1c1e]/95 p-5 text-white shadow-[0_24px_80px_rgba(0,0,0,0.45)] backdrop-blur-xl sm:p-6"
+            className="modal-panel"
             initial={{ opacity: 0, y: 16, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.96 }}
             role="dialog"
             transition={{ duration: 0.22, ease: "easeOut" }}
           >
+            <div className="modal-handle" />
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-lg font-semibold">Edit Category</p>
-                <p className="mt-1 text-sm leading-6 text-white/55">
+                <p className="page-label">Category</p>
+                <p className="mt-3 text-[30px] leading-[1.05] tracking-[-0.04em] text-[var(--text-primary)]" style={{ fontFamily: "var(--font-serif)" }}>
+                  Edit Category
+                </p>
+                <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">
                   Update category name or type. Icon and color are set
                   automatically.
                 </p>
               </div>
               <button
                 aria-label="Close modal"
-                className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/10 bg-white/10 text-white/70 transition hover:bg-white/15 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                className="icon-button shrink-0 rounded-full disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={isSubmitting}
                 onClick={onClose}
                 type="button"
@@ -124,14 +128,14 @@ export function EditCategoryModal({
               />
 
               {error ? (
-                <p className="rounded-xl border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
+                <p className="alert-error">
                   {error}
                 </p>
               ) : null}
 
               <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                 <button
-                  className="inline-flex items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white/80 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                  className="btn-base btn-secondary disabled:cursor-not-allowed disabled:opacity-50"
                   disabled={isSubmitting}
                   onClick={onClose}
                   type="button"
@@ -139,7 +143,7 @@ export function EditCategoryModal({
                   Cancel
                 </button>
                 <button
-                  className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-purple-500 to-indigo-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-purple-500/20 transition hover:scale-[1.01] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="btn-base btn-primary disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={isSubmitting}
                   type="submit"
                 >

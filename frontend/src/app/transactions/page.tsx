@@ -167,36 +167,36 @@ export default function TransactionsPage() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-[#0f0f10] px-4 pb-10 pt-5 text-white sm:px-6 lg:px-8">
+    <main className="app-shell px-4 sm:px-6 lg:px-8">
       <DashboardBackground />
 
-      <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-6">
+      <div className="app-desktop-page relative flex flex-col gap-6">
         <motion.header
-          className="flex flex-col gap-5 rounded-3xl border border-white/10 bg-white/[0.045] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.24)] backdrop-blur-xl sm:p-6 lg:flex-row lg:items-center lg:justify-between"
+          className="warm-panel app-card-pad flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between"
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.24, ease: "easeOut" }}
         >
           <div className="min-w-0">
             <Link
-              className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-white/55 transition hover:text-purple-300"
+              className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)] transition hover:text-[var(--accent-cream)]"
               href="/dashboard"
             >
               <ArrowLeft className="h-4 w-4" />
               Dashboard
             </Link>
             <div className="flex items-start gap-4">
-              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-purple-500/15 text-purple-300">
+              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-[18px] border border-[var(--border-muted)] bg-[var(--accent-purple-soft)] text-[var(--accent-purple)]">
                 <List className="h-6 w-6" />
               </span>
               <div className="min-w-0">
-                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/35">
-                  SpendWise
+                <p className="page-label">
+                  Transactions
                 </p>
-                <h1 className="mt-2 text-3xl font-bold tracking-normal text-white sm:text-4xl">
+                <h1 className="page-title mt-3">
                   Transactions
                 </h1>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-white/55">
+                <p className="page-subtitle mt-3 max-w-2xl">
                   Manage all transactions from one place.
                 </p>
               </div>
@@ -204,7 +204,7 @@ export default function TransactionsPage() {
           </div>
 
           <button
-            className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-500 to-indigo-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-purple-500/20 transition hover:scale-[1.01] active:scale-[0.98] sm:w-auto"
+            className="btn-base btn-primary w-full sm:w-auto"
             onClick={() => setIsAddTransactionOpen(true)}
             type="button"
           >
@@ -215,7 +215,7 @@ export default function TransactionsPage() {
 
         {error ? (
           <motion.div
-            className="mb-6 rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-red-400"
+            className="alert-error mb-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
@@ -235,7 +235,7 @@ export default function TransactionsPage() {
             search={search}
             type={type}
           />
-          <p className="mt-3 text-sm text-slate-400">{resultLabel}</p>
+          <p className="mt-3 text-sm text-[var(--text-secondary)]">{resultLabel}</p>
         </motion.div>
 
         <motion.div

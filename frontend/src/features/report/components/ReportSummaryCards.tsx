@@ -37,9 +37,9 @@ type SummaryCardProps = {
 
 function SummaryCard({ label, value, tone }: SummaryCardProps) {
   return (
-    <section className="rounded-2xl border border-white/10 bg-[#1c1c1e]/85 p-4 shadow-xl shadow-black/15 backdrop-blur-xl">
-      <p className="text-xs font-medium uppercase tracking-wide text-white/50">{label}</p>
-      <p className={`mt-2 truncate text-xl font-semibold ${tone}`}>{value}</p>
+    <section className="warm-panel-compact p-4">
+      <p className="page-label text-[12px]">{label}</p>
+      <p className={`mt-3 text-[clamp(1.5rem,5vw,2rem)] font-semibold leading-[1.08] tracking-[-0.04em] ${tone}`} style={{ fontFamily: "var(--font-serif)" }}>{value}</p>
     </section>
   );
 }

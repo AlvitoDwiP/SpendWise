@@ -23,10 +23,10 @@ export function TransactionList({
 }: TransactionListProps) {
   if (transactions.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-xl border border-white/10 bg-white/5 py-16 backdrop-blur-sm">
-        <div className="text-4xl mb-4">📊</div>
-        <p className="text-lg font-medium text-white">{emptyTitle}</p>
-        <p className="mt-2 text-sm text-slate-400">{emptyDescription}</p>
+      <div className="state-card flex flex-col items-center justify-center py-14 text-center">
+        <div className="mb-4 grid h-14 w-14 place-items-center rounded-full border border-[var(--border-muted)] bg-[var(--surface-raised)] text-2xl text-[var(--text-muted)]">◎</div>
+        <p className="text-lg font-medium text-[var(--text-primary)]">{emptyTitle}</p>
+        <p className="mt-2 max-w-[18rem] text-sm leading-6 text-[var(--text-secondary)]">{emptyDescription}</p>
       </div>
     );
   }
