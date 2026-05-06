@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"errors"
-	"log"
 	"os"
 	"strings"
 
@@ -94,21 +93,17 @@ func Login(db *gorm.DB, email string, password string) (*models.User, error) {
 
 func LoginWithGoogle(ctx context.Context, db *gorm.DB, idToken string) (*models.User, error) {
 	idToken = strings.TrimSpace(idToken)
-	log.Println("ID_TOKEN_LENGTH:", len(idToken))
 	if idToken == "" {
 		return nil, errors.New("id_token is required")
 	}
 
 	googleClientID := strings.TrimSpace(os.Getenv("GOOGLE_CLIENT_ID"))
-	log.Println("GOOGLE_CLIENT_ID_EMPTY:", googleClientID == "")
-	log.Println("GOOGLE_CLIENT_ID:", googleClientID)
 	if googleClientID == "" {
 		return nil, errors.New("google client id is not configured")
 	}
 
 	payload, err := idtoken.Validate(ctx, idToken, googleClientID)
 	if err != nil {
-		log.Println("GOOGLE_VALIDATION_ERROR:", err)
 		return nil, errors.New("invalid google token")
 	}
 

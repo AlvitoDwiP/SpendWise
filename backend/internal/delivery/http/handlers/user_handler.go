@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"SpendWise/internal/delivery/http/dto"
-	"SpendWise/internal/domain/models"
 	"SpendWise/internal/services"
 	"SpendWise/internal/utils"
 
@@ -54,9 +53,8 @@ func NewUserHandler(db *gorm.DB) *UserHandler {
 }
 
 func (h *UserHandler) GetMe(c *gin.Context) {
-	userID, ok := utils.GetUserIDFromContext(c)
+	userID, ok := utils.RequireUserID(c)
 	if !ok {
-		utils.ErrorResponse(c, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
@@ -70,9 +68,8 @@ func (h *UserHandler) GetMe(c *gin.Context) {
 }
 
 func (h *UserHandler) UpdateProfile(c *gin.Context) {
-	userID, ok := utils.GetUserIDFromContext(c)
+	userID, ok := utils.RequireUserID(c)
 	if !ok {
-		utils.ErrorResponse(c, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
@@ -92,9 +89,8 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 }
 
 func (h *UserHandler) DeleteMe(c *gin.Context) {
-	userID, ok := utils.GetUserIDFromContext(c)
+	userID, ok := utils.RequireUserID(c)
 	if !ok {
-		utils.ErrorResponse(c, http.StatusUnauthorized, "You must be logged in to delete your account")
 		return
 	}
 
@@ -117,9 +113,8 @@ func (h *UserHandler) DeleteMe(c *gin.Context) {
 }
 
 func (h *UserHandler) UpdateProfilePhoto(c *gin.Context) {
-	userID, ok := utils.GetUserIDFromContext(c)
+	userID, ok := utils.RequireUserID(c)
 	if !ok {
-		utils.ErrorResponse(c, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
@@ -170,9 +165,8 @@ func (h *UserHandler) UpdateProfilePhoto(c *gin.Context) {
 }
 
 func (h *UserHandler) ChangePassword(c *gin.Context) {
-	userID, ok := utils.GetUserIDFromContext(c)
+	userID, ok := utils.RequireUserID(c)
 	if !ok {
-		utils.ErrorResponse(c, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
@@ -191,32 +185,12 @@ func (h *UserHandler) ChangePassword(c *gin.Context) {
 }
 
 func (h *UserHandler) ResetUserData(c *gin.Context) {
-	userID, ok := utils.GetUserIDFromContext(c)
+	userID, ok := utils.RequireUserID(c)
 	if !ok {
-		utils.ErrorResponse(c, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
-	tx := h.DB.Begin()
-	if tx.Error != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, "failed to reset user data")
-		return
-	}
-
-	if err := tx.Where("user_id = ?", userID).Delete(&models.Transaction{}).Error; err != nil {
-		_ = tx.Rollback().Error
-		utils.ErrorResponse(c, http.StatusInternalServerError, "failed to reset user data")
-		return
-	}
-
-	if err := tx.Where("user_id = ?", userID).Delete(&models.Category{}).Error; err != nil {
-		_ = tx.Rollback().Error
-		utils.ErrorResponse(c, http.StatusInternalServerError, "failed to reset user data")
-		return
-	}
-
-	if err := tx.Commit().Error; err != nil {
-		_ = tx.Rollback().Error
+	if err := services.ResetCurrentUserData(h.DB, userID); err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "failed to reset user data")
 		return
 	}

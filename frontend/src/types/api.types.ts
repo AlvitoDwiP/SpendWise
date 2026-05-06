@@ -1,12 +1,18 @@
 export type ApiSuccessResponse<T> = {
   success: true;
-  message: string;
   data: T;
+  message?: string;
+};
+
+export type ApiErrorDetail = {
+  code: string;
+  message: string;
 };
 
 export type ApiErrorResponse = {
   success: false;
-  message: string;
+  message?: string;
+  error?: ApiErrorDetail;
 };
 
 export type PaginationMeta = {

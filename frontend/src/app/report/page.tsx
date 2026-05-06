@@ -10,7 +10,8 @@ import { DashboardSidebarCard } from "@/components/layout/DashboardSidebarCard";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { getCategories } from "@/features/categories/api";
 import { getMe } from "@/features/settings/api";
-import { logout } from "@/lib/auth";
+import { getErrorMessage, isUnauthorizedError, logout } from "@/lib/auth";
+import { getGreetingByTime } from "@/lib/format";
 import { ReportCategoryBreakdown } from "@/features/report/components/ReportCategoryBreakdown";
 import { ReportPeriodFilter } from "@/features/report/components/ReportPeriodFilter";
 import { ReportSummaryCards } from "@/features/report/components/ReportSummaryCards";
@@ -75,9 +76,9 @@ export default function ReportPage() {
           transactions: transactionsResponse.items,
         });
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Failed to load report.";
+        const message = getErrorMessage(err, "Failed to load report.");
 
-        if (isAuthError(message)) {
+        if (isUnauthorizedError(err)) {
           logout();
           router.replace("/login");
           return;
@@ -252,7 +253,7 @@ export default function ReportPage() {
 
         <div className="relative mx-auto w-full max-w-full flex-1 px-4 pb-[calc(env(safe-area-inset-bottom)+6.6rem)] pt-2.5 md:px-8 md:pb-12 md:pt-0">
           <DashboardNavbar
-            greeting={getGreeting()}
+            greeting={getGreetingByTime()}
             isSidebarOpen={isSidebarOpen}
             onAddTransaction={() => router.push("/transactions")}
             onMenuClick={() => {
@@ -337,29 +338,4 @@ function getPeriodRange(period: ReportPeriod): { start: Date | null; end: Date |
     start: new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0),
     end: new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999),
   };
-}
-
-function getGreeting(): string {
-  const hour = new Date().getHours();
-
-  if (hour < 12) {
-    return "Good Morning";
-  }
-  if (hour < 18) {
-    return "Good Afternoon";
-  }
-
-  return "Good Evening";
-}
-
-function isAuthError(message: string): boolean {
-  const normalizedMessage = message.toLowerCase();
-
-  return (
-    normalizedMessage.includes("401") ||
-    normalizedMessage.includes("403") ||
-    normalizedMessage.includes("authorization") ||
-    normalizedMessage.includes("unauthorized") ||
-    normalizedMessage.includes("token")
-  );
 }

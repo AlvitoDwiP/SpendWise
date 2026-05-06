@@ -19,13 +19,13 @@ import {
 import {
   changePassword,
   deleteAccount,
-  getMe,
   resetUserData,
   uploadProfilePhoto,
   updateProfile,
 } from "@/features/settings/api";
 import { buildUrl, getToken } from "@/lib/api/client";
-import { logout } from "@/lib/auth";
+import { getErrorMessage, getCurrentUser, isUnauthorizedError, logout } from "@/lib/auth";
+import { getGreetingByTime } from "@/lib/format";
 import type { User } from "@/types/user.types";
 
 export default function SettingsPage() {
@@ -49,15 +49,21 @@ export default function SettingsPage() {
       setError("");
 
       try {
-        const profile = await getMe();
+        const profile = await getCurrentUser();
+
+        if (!profile) {
+          logout();
+          router.replace("/login");
+          return;
+        }
 
         if (isMounted) {
           setUser(profile);
         }
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Failed to load settings.";
+        const message = getErrorMessage(err, "Failed to load settings.");
 
-        if (isAuthError(message)) {
+        if (isUnauthorizedError(err)) {
           logout();
           router.replace("/login");
           return;
@@ -152,9 +158,9 @@ export default function SettingsPage() {
       setUser(updatedUser);
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Failed to upload profile photo.";
+        getErrorMessage(err, "Failed to upload profile photo.");
 
-      if (isAuthError(message)) {
+      if (isUnauthorizedError(err)) {
         logout();
         router.replace("/login");
         throw new Error(message);
@@ -222,7 +228,7 @@ export default function SettingsPage() {
 
         <div className="relative mx-auto w-full max-w-full flex-1 px-4 pb-[calc(env(safe-area-inset-bottom)+6.6rem)] pt-2.5 md:px-8 md:pb-12 md:pt-0">
           <DashboardNavbar
-            greeting={getGreeting()}
+            greeting={getGreetingByTime()}
             isSidebarOpen={isSidebarOpen}
             onAddTransaction={() => router.push("/transactions")}
             onMenuClick={() => {
@@ -279,30 +285,5 @@ export default function SettingsPage() {
         onLogout={handleLogout}
       />
     </main>
-  );
-}
-
-function getGreeting(): string {
-  const hour = new Date().getHours();
-
-  if (hour < 12) {
-    return "Good Morning";
-  }
-  if (hour < 18) {
-    return "Good Afternoon";
-  }
-
-  return "Good Evening";
-}
-
-function isAuthError(message: string): boolean {
-  const normalizedMessage = message.toLowerCase();
-
-  return (
-    normalizedMessage.includes("401") ||
-    normalizedMessage.includes("403") ||
-    normalizedMessage.includes("authorization") ||
-    normalizedMessage.includes("unauthorized") ||
-    normalizedMessage.includes("token")
   );
 }

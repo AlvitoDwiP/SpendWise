@@ -1,9 +1,7 @@
 import {
+  ApiClientError,
   apiRequest,
-  buildUrl,
-  getErrorMessage,
-  getToken,
-  removeToken,
+  apiClient,
   withQuery,
 } from "@/lib/api/client";
 import { API_ENDPOINTS } from "@/lib/api/endpoints";
@@ -24,7 +22,7 @@ export async function getTransactions(
 }
 
 export async function getTransactionById(id: number): Promise<Transaction> {
-  const response = await apiRequest<ApiSuccessResponse<Transaction>>(
+  const response = await apiClient.get<ApiSuccessResponse<Transaction>>(
     API_ENDPOINTS.transactions.byId(id),
   );
 
@@ -34,12 +32,9 @@ export async function getTransactionById(id: number): Promise<Transaction> {
 export async function createTransaction(
   payload: TransactionPayload,
 ): Promise<Transaction> {
-  const response = await apiRequest<ApiSuccessResponse<Transaction>>(
+  const response = await apiClient.post<ApiSuccessResponse<Transaction>, TransactionPayload>(
     API_ENDPOINTS.transactions.list,
-    {
-      method: "POST",
-      body: JSON.stringify(payload),
-    },
+    payload,
   );
 
   return response.data;
@@ -49,62 +44,46 @@ export async function updateTransaction(
   id: number,
   payload: TransactionPayload,
 ): Promise<Transaction> {
-  const response = await apiRequest<ApiSuccessResponse<Transaction>>(
+  const response = await apiClient.put<ApiSuccessResponse<Transaction>, TransactionPayload>(
     API_ENDPOINTS.transactions.byId(id),
-    {
-      method: "PUT",
-      body: JSON.stringify(payload),
-    },
+    payload,
   );
 
   return response.data;
 }
 
 export async function deleteTransaction(id: number): Promise<void> {
-  await apiRequest<ApiSuccessResponse<null>>(API_ENDPOINTS.transactions.byId(id), {
-    method: "DELETE",
-  });
+  await apiClient.delete<ApiSuccessResponse<null>>(API_ENDPOINTS.transactions.byId(id));
 }
 
 export async function scanReceipt(file: File): Promise<ReceiptScanSuggestion> {
   const formData = new FormData();
   formData.append("receipt", file);
 
-  const headers = new Headers();
-  const token = getToken();
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
-  }
+  try {
+    const payload = await apiClient.post<
+      ApiSuccessResponse<ReceiptScanSuggestion> | ReceiptScanSuggestion,
+      FormData
+    >(API_ENDPOINTS.transactions.scanReceipt, formData);
 
-  const response = await fetch(buildUrl(API_ENDPOINTS.transactions.scanReceipt), {
-    method: "POST",
-    body: formData,
-    headers,
-  });
-
-  if (!response.ok) {
-    const message = await getErrorMessage(response);
-    if (response.status === 401) {
-      removeToken();
-      throw new Error(message || "Sesi Anda berakhir. Silakan login ulang.");
+    if ("success" in payload) {
+      return payload.data;
     }
-    if (response.status === 500) {
-      throw new Error("Failed to process receipt scan. Please try again shortly.");
+
+    return payload;
+  } catch (error) {
+    if (error instanceof ApiClientError) {
+      if (error.status === 500) {
+        throw new Error("Failed to process receipt scan. Please try again shortly.");
+      }
+      if (error.status === 400) {
+        throw new Error(error.message || "File receipt tidak valid.");
+      }
+      if (error.status === 401) {
+        throw new Error(error.message || "Sesi Anda berakhir. Silakan login ulang.");
+      }
     }
-    if (response.status === 400) {
-      throw new Error(message || "File receipt tidak valid.");
-    }
-    throw new Error(message);
+
+    throw error;
   }
-
-  const payload =
-    (await response.json()) as
-      | ApiSuccessResponse<ReceiptScanSuggestion>
-      | ReceiptScanSuggestion;
-
-  if ("success" in payload) {
-    return payload.data;
-  }
-
-  return payload;
 }

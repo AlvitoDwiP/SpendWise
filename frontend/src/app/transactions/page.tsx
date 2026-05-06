@@ -17,7 +17,7 @@ import { deleteTransaction, getTransactions } from "@/features/transactions/api"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { getToken } from "@/lib/api/client";
 import { DashboardBackground } from "@/features/dashboard/components/DashboardBackground";
-import { logout } from "@/lib/auth";
+import { getErrorMessage, isUnauthorizedError, logout } from "@/lib/auth";
 import type { Category, CategoryType } from "@/types/category.types";
 import type { Transaction } from "@/types/transaction.types";
 
@@ -25,17 +25,6 @@ type TransactionsState = {
   transactions: Transaction[];
   categories: Category[];
 };
-
-function isAuthError(message: string): boolean {
-  const normalized = message.toLowerCase();
-  return (
-    normalized.includes("unauthorized") ||
-    normalized.includes("invalid token") ||
-    normalized.includes("token expired") ||
-    normalized.includes("401") ||
-    normalized.includes("403")
-  );
-}
 
 export default function TransactionsPage() {
   const router = useRouter();
@@ -67,8 +56,8 @@ export default function TransactionsPage() {
         transactions: sortByNewest(txData.items),
       });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to load transactions.";
-      if (isAuthError(message)) {
+      const message = getErrorMessage(err, "Failed to load transactions.");
+      if (isUnauthorizedError(err)) {
         logout();
         router.replace("/login");
         return;
@@ -154,8 +143,8 @@ export default function TransactionsPage() {
       );
       setDeletingTransaction(null);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to delete transaction.";
-      if (isAuthError(message)) {
+      const message = getErrorMessage(err, "Failed to delete transaction.");
+      if (isUnauthorizedError(err)) {
         logout();
         router.replace("/login");
         return;

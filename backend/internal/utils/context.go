@@ -17,3 +17,13 @@ func GetUserIDFromContext(c *gin.Context) (uint, bool) {
 
 	return userID, true
 }
+
+func RequireUserID(c *gin.Context) (uint, bool) {
+	userID, ok := GetUserIDFromContext(c)
+	if !ok {
+		ErrorResponse(c, 401, "unauthorized")
+		return 0, false
+	}
+
+	return userID, true
+}

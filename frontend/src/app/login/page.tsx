@@ -8,29 +8,12 @@ import { AuthBackdrop } from "@/features/auth/components/AuthBackdrop";
 import { AuthModal } from "@/features/auth/components/AuthModal";
 import { LoginForm } from "@/features/auth/components/LoginForm";
 import { googleLogin, login } from "@/features/auth/api";
+import {
+  getGoogleIdToken,
+  validateLoginForm,
+} from "@/features/auth/utils";
 import { GuestDashboardPreview } from "@/features/dashboard/components/GuestDashboardPreview";
-import type { GoogleTokenPayload } from "@/features/auth/types";
 import { getToken, setToken } from "@/lib/api/client";
-
-function decodeBase64Url(value: string): string {
-  const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
-  const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
-  return atob(padded);
-}
-
-function decodeGoogleTokenPayload(idToken: string): GoogleTokenPayload | null {
-  const parts = idToken.split(".");
-  if (parts.length !== 3) {
-    return null;
-  }
-
-  try {
-    const decoded = decodeBase64Url(parts[1]);
-    return JSON.parse(decoded) as GoogleTokenPayload;
-  } catch {
-    return null;
-  }
-}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -51,16 +34,16 @@ export default function LoginPage() {
     event.preventDefault();
     setError("");
 
-    const trimmedEmail = email.trim();
-    if (!trimmedEmail || !password) {
-      setError("Email and password are required.");
+    const validationError = validateLoginForm({ email, password });
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
     setIsSubmitting(true);
     try {
       const response = await login({
-        email: trimmedEmail,
+        email: email.trim(),
         password,
       });
       setToken(response.token);
@@ -73,15 +56,11 @@ export default function LoginPage() {
   }
 
   async function handleGoogleSuccess(credentialResponse: CredentialResponse) {
-    const idToken = credentialResponse.credential?.trim();
+    const idToken = getGoogleIdToken(credentialResponse);
     if (!idToken) {
       setError("Google login failed: token not found.");
       return;
     }
-    const payload = decodeGoogleTokenPayload(idToken);
-    console.log("GOOGLE_TOKEN_AUD:", payload?.aud);
-    console.log("GOOGLE_TOKEN_ISS:", payload?.iss);
-    console.log("GOOGLE_TOKEN_EXP:", payload?.exp);
 
     setError("");
     setIsSubmitting(true);

@@ -1,4 +1,4 @@
-import { apiRequest } from "@/lib/api/client";
+import { apiClient } from "@/lib/api/client";
 import { API_ENDPOINTS } from "@/lib/api/endpoints";
 import type { ApiSuccessResponse } from "@/types/api.types";
 import type {
@@ -8,7 +8,7 @@ import type {
 import type { User } from "@/types/user.types";
 
 export async function getMe(): Promise<User> {
-  const response = await apiRequest<ApiSuccessResponse<User>>(
+  const response = await apiClient.get<ApiSuccessResponse<User>>(
     API_ENDPOINTS.profile.me,
   );
 
@@ -16,46 +16,36 @@ export async function getMe(): Promise<User> {
 }
 
 export async function updateProfile(payload: UpdateProfilePayload): Promise<User> {
-  const response = await apiRequest<ApiSuccessResponse<User>>(
+  const response = await apiClient.put<ApiSuccessResponse<User>, UpdateProfilePayload>(
     API_ENDPOINTS.profile.me,
-    {
-      method: "PUT",
-      body: JSON.stringify(payload),
-    },
+    payload,
   );
 
   return response.data;
 }
 
 export async function changePassword(payload: ChangePasswordPayload): Promise<void> {
-  await apiRequest<ApiSuccessResponse<null>>(API_ENDPOINTS.profile.password, {
-    method: "PUT",
-    body: JSON.stringify(payload),
-  });
+  await apiClient.put<ApiSuccessResponse<null>, ChangePasswordPayload>(
+    API_ENDPOINTS.profile.password,
+    payload,
+  );
 }
 
 export async function resetUserData(): Promise<void> {
-  await apiRequest<ApiSuccessResponse<null>>(API_ENDPOINTS.profile.resetData, {
-    method: "POST",
-  });
+  await apiClient.post<ApiSuccessResponse<null>>(API_ENDPOINTS.profile.resetData);
 }
 
 export async function deleteAccount(): Promise<void> {
-  await apiRequest<ApiSuccessResponse<null>>(API_ENDPOINTS.profile.deleteAccount, {
-    method: "DELETE",
-  });
+  await apiClient.delete<ApiSuccessResponse<null>>(API_ENDPOINTS.profile.deleteAccount);
 }
 
 export async function uploadProfilePhoto(file: File): Promise<User> {
   const formData = new FormData();
   formData.append("photo", file);
 
-  const response = await apiRequest<ApiSuccessResponse<User>>(
+  const response = await apiClient.put<ApiSuccessResponse<User>, FormData>(
     API_ENDPOINTS.profile.photo,
-    {
-      method: "PUT",
-      body: formData,
-    },
+    formData,
   );
 
   return response.data;

@@ -17,6 +17,7 @@ import { MobileRecentTransactions } from "@/features/dashboard/components/Mobile
 import { RecentTransactionsCard } from "@/features/dashboard/components/RecentTransactionsCard";
 import { SpendingOverviewCard } from "@/features/dashboard/components/SpendingOverviewCard";
 import { ThisMonthSummaryCard } from "@/features/dashboard/components/ThisMonthSummaryCard";
+import { getGreetingByTime } from "@/lib/format";
 
 const monthOptions = [
   {
@@ -42,7 +43,7 @@ export function GuestDashboardPreview() {
       <div className="relative mx-auto flex min-h-screen w-full max-w-[430px] flex-1 px-0 pb-[calc(env(safe-area-inset-bottom)+7.5rem)] pt-0 md:max-w-full md:px-8 md:pb-12 md:pt-0">
         <div className="space-y-5 pb-2 md:hidden">
           <MobileDashboardHeader
-            greeting={getGreeting()}
+            greeting={getGreetingByTime()}
             isGuest
             userName="Guest"
           />
@@ -114,7 +115,7 @@ export function GuestDashboardPreview() {
                     G
                   </div>
                   <h1 className="display-greeting truncate">
-                    {getGreeting()}, Guest
+                    {getGreetingByTime()}, Guest
                   </h1>
                 </div>
                 <p className="max-w-xl font-sans text-[16px] leading-6 text-[var(--text-secondary)]">
@@ -122,7 +123,7 @@ export function GuestDashboardPreview() {
                 </p>
               </div>
             </div>
-            <BalanceHeroCard balance={0} greeting={getGreeting()} userName="Guest" />
+            <BalanceHeroCard balance={0} greeting={getGreetingByTime()} userName="Guest" />
             <BalanceStatsCards
               expense={0}
               income={0}
@@ -176,17 +177,4 @@ export function GuestDashboardPreview() {
       </div>
     </div>
   );
-}
-
-function getGreeting(): string {
-  const hour = new Date().getHours();
-
-  if (hour < 12) {
-    return "Good Morning";
-  }
-  if (hour < 18) {
-    return "Good Afternoon";
-  }
-
-  return "Good Evening";
 }

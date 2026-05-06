@@ -1,4 +1,4 @@
-export function formatRupiah(value: number): string {
+export function formatCurrencyIDR(value: number): string {
   return new Intl.NumberFormat("id-ID", {
     style: "currency",
     currency: "IDR",
@@ -6,6 +6,10 @@ export function formatRupiah(value: number): string {
   })
     .format(value)
     .replace(/\s/g, " ");
+}
+
+export function formatRupiah(value: number): string {
+  return formatCurrencyIDR(value);
 }
 
 export function formatRupiahNumber(value: number): string {
@@ -36,6 +40,25 @@ export function formatDate(value: string): string {
   }).format(new Date(value));
 }
 
+export function formatMonthYear(
+  value: string | Date,
+  locale: string = "en",
+): string {
+  return new Intl.DateTimeFormat(locale, {
+    month: "long",
+    year: "numeric",
+  }).format(typeof value === "string" ? new Date(value) : value);
+}
+
+export function formatCompactNumber(value: number): string {
+  return new Intl.NumberFormat("id-ID", {
+    maximumFractionDigits: 1,
+    notation: "compact",
+  })
+    .format(value)
+    .replace(/\s/g, "");
+}
+
 export function formatCompactRupiah(value: number): string {
   const absoluteValue = Math.abs(value);
 
@@ -51,6 +74,36 @@ export function formatCompactRupiah(value: number): string {
 
 export function formatTransactionDate(value: string): string {
   return formatDate(value);
+}
+
+export function formatPercent(value: number): string {
+  return new Intl.NumberFormat("id-ID", {
+    maximumFractionDigits: 1,
+    style: "percent",
+  }).format(value / 100);
+}
+
+export function getGreetingByTime(date: Date = new Date()): string {
+  const hour = date.getHours();
+
+  if (hour < 12) {
+    return "Good Morning";
+  }
+  if (hour < 18) {
+    return "Good Afternoon";
+  }
+
+  return "Good Evening";
+}
+
+export function normalizeTransactionType(value: string): "income" | "expense" | null {
+  const normalizedValue = value.trim().toLowerCase();
+
+  if (normalizedValue === "income" || normalizedValue === "expense") {
+    return normalizedValue;
+  }
+
+  return null;
 }
 
 function formatNumber(value: number): string {

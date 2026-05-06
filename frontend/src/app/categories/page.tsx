@@ -18,7 +18,7 @@ import {
 import { getCategories } from "@/features/categories/api";
 import { getToken } from "@/lib/api/client";
 import { DashboardBackground } from "@/features/dashboard/components/DashboardBackground";
-import { logout } from "@/lib/auth";
+import { getErrorMessage, isUnauthorizedError, logout } from "@/lib/auth";
 import type { Category, CategoryType } from "@/types/category.types";
 
 type CategorySummary = Record<CategoryType, number>;
@@ -61,10 +61,9 @@ export default function CategoriesPage() {
     try {
       setCategories(await getCategories());
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to load categories.";
+      const message = getErrorMessage(err, "Failed to load categories.");
 
-      if (isAuthError(message)) {
+      if (isUnauthorizedError(err)) {
         logout();
         router.replace("/login");
         return;
@@ -242,17 +241,5 @@ function CategoryStatCard({
       </p>
       <p className={`mt-3 text-[34px] font-semibold tracking-[-0.04em] ${toneClassName}`} style={{ fontFamily: "var(--font-serif)" }}>{value}</p>
     </motion.div>
-  );
-}
-
-function isAuthError(message: string): boolean {
-  const normalizedMessage = message.toLowerCase();
-
-  return (
-    normalizedMessage.includes("401") ||
-    normalizedMessage.includes("403") ||
-    normalizedMessage.includes("authorization") ||
-    normalizedMessage.includes("unauthorized") ||
-    normalizedMessage.includes("token")
   );
 }
