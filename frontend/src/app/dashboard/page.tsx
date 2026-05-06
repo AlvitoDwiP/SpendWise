@@ -55,6 +55,23 @@ type MonthOption = {
   year: number;
 };
 
+const guestDashboardState: DashboardState = {
+  allTransactions: [],
+  recentTransactions: [],
+  summary: {
+    current_balance: 0,
+    this_month_expense: 0,
+    this_month_income: 0,
+    this_month_transaction_count: 0,
+  },
+  user: {
+    email: "",
+    id: 0,
+    name: "Guest",
+    profile_photo_url: null,
+  },
+};
+
 export default function DashboardPage() {
   const router = useRouter();
   const [dashboard, setDashboard] = useState<DashboardState | null>(null);
@@ -77,22 +94,7 @@ export default function DashboardPage() {
     async function loadDashboard() {
       if (!isAuthenticated) {
         if (isMounted) {
-          setDashboard({
-            allTransactions: [],
-            recentTransactions: [],
-            summary: {
-              current_balance: 0,
-              this_month_expense: 0,
-              this_month_income: 0,
-              this_month_transaction_count: 0,
-            },
-            user: {
-              email: "",
-              id: 0,
-              name: "Guest",
-              profile_photo_url: null,
-            },
-          });
+          setDashboard(guestDashboardState);
           setIsLoading(false);
         }
         return;
@@ -325,7 +327,17 @@ export default function DashboardPage() {
 
   function handleLogout() {
     logout();
+    setDashboard(guestDashboardState);
+    setError("");
+    setSelectedMonthKey("");
+    setEditingTransaction(null);
+    setDeletingTransaction(null);
+    setDeleteTransactionError("");
+    setIsAddTransactionOpen(false);
+    setIsDeletingTransaction(false);
     setIsDrawerOpen(false);
+    setIsSidebarOpen(false);
+    setIsLoading(false);
     router.replace("/dashboard");
   }
 
@@ -419,13 +431,13 @@ export default function DashboardPage() {
             </section>
             <MobileRecentTransactions
               emptyActionHref={isGuest ? "/login" : undefined}
-              emptyActionLabel={isGuest ? "Masuk" : undefined}
+              emptyActionLabel={isGuest ? "Sign In" : undefined}
               emptyDescription={
                 isGuest
-                  ? "Masuk untuk mulai mencatat pemasukan dan pengeluaran."
+                  ? "Sign in to start tracking your income and expenses."
                   : "No recent transactions yet."
               }
-              emptyTitle={isGuest ? "Belum ada transaksi" : undefined}
+              emptyTitle={isGuest ? "No transactions yet" : undefined}
               onDeleteTransaction={(transaction) => {
                 if (isGuest) {
                   router.push("/login");
@@ -557,13 +569,13 @@ export default function DashboardPage() {
               />
               <RecentTransactionsCard
                 emptyActionHref={isGuest ? "/login" : undefined}
-                emptyActionLabel={isGuest ? "Masuk" : undefined}
+                emptyActionLabel={isGuest ? "Sign In" : undefined}
                 emptyDescription={
                   isGuest
-                    ? "Masuk untuk mulai mencatat pemasukan dan pengeluaran."
+                    ? "Sign in to start tracking your income and expenses."
                     : "No recent transactions yet."
                 }
-                emptyTitle={isGuest ? "Belum ada transaksi" : undefined}
+                emptyTitle={isGuest ? "No transactions yet" : undefined}
                 onDeleteTransaction={(transaction) => {
                   if (isGuest) {
                     router.push("/login");

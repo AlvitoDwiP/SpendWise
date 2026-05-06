@@ -33,9 +33,9 @@ export function LoginForm({
     <section className="auth-modal-content p-7 sm:p-9">
       <div className="mb-8 pr-10">
         <p className="auth-kicker">SpendWise</p>
-        <h1 className="auth-modal-title mt-3">Masuk ke SpendWise</h1>
+        <h1 className="auth-modal-title mt-3">Sign in to SpendWise</h1>
         <p className="auth-modal-description mt-3">
-          Kelola pemasukan, pengeluaran, dan laporan keuangan Anda dengan lebih tenang.
+          Manage your income, expenses, and financial reports with more clarity.
         </p>
       </div>
 
@@ -53,13 +53,13 @@ export function LoginForm({
         </div>
       ) : (
         <button className="auth-social-btn mb-5 w-full" disabled type="button">
-          Lanjutkan dengan Google
+          Continue with Google
         </button>
       )}
 
       <div className="auth-divider">
         <span />
-        <span>ATAU</span>
+        <span>OR</span>
         <span />
       </div>
 
@@ -71,7 +71,7 @@ export function LoginForm({
             id="email"
             name="email"
             onChange={(event) => onEmailChange(event.target.value)}
-            placeholder="Alamat email"
+            placeholder="Email address"
             type="email"
             value={email}
           />
@@ -84,7 +84,7 @@ export function LoginForm({
             id="password"
             name="password"
             onChange={(event) => onPasswordChange(event.target.value)}
-            placeholder="Kata sandi"
+            placeholder="Password"
             type="password"
             value={password}
           />
@@ -101,14 +101,14 @@ export function LoginForm({
           disabled={isSubmitting}
           type="submit"
         >
-          {isSubmitting ? "Memproses..." : "Masuk"}
+          {isSubmitting ? "Processing..." : "Sign In"}
         </button>
       </form>
 
       <p className="mt-6 text-center font-sans text-sm text-[var(--text-secondary)]">
-        Belum punya akun?{" "}
+        Don&apos;t have an account?{" "}
         <Link className="font-semibold text-[var(--accent-cream)]" href="/register">
-          Daftar
+          Register
         </Link>
       </p>
     </section>

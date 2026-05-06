@@ -522,6 +522,80 @@ a:focus-visible {
     color: var(--text-muted);
   }
 
+  .delete-account-btn {
+    display: inline-flex;
+    min-height: 46px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 18px;
+    border: 1px solid rgba(216, 124, 124, 0.32);
+    background: rgba(216, 124, 124, 0.12);
+    padding: 0 20px;
+    font-family: var(--font-ui);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--accent-red);
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+  }
+
+  .delete-account-btn:hover {
+    background: rgba(216, 124, 124, 0.18);
+  }
+
+  .delete-account-btn:active {
+    background: rgba(216, 124, 124, 0.22);
+  }
+
+  .settings-danger-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(12px);
+  }
+
+  .settings-danger-modal {
+    border: 1px solid var(--border-muted);
+    border-radius: 28px;
+    background: linear-gradient(180deg, rgba(36, 31, 26, 0.98), rgba(33, 29, 24, 1));
+    padding: 28px;
+    color: var(--text-primary);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
+  }
+
+  .settings-delete-btn,
+  .settings-cancel-btn {
+    display: inline-flex;
+    min-height: 46px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 18px;
+    padding: 0 20px;
+    font-family: var(--font-ui);
+    font-size: 15px;
+    font-weight: 700;
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+  }
+
+  .settings-delete-btn {
+    border: 1px solid rgba(216, 124, 124, 0.34);
+    background: rgba(216, 124, 124, 0.16);
+    color: var(--accent-red);
+  }
+
+  .settings-delete-btn:hover {
+    background: rgba(216, 124, 124, 0.2);
+  }
+
+  .settings-cancel-btn {
+    border: 1px solid var(--border-muted);
+    background: var(--surface-raised);
+    color: var(--accent-cream);
+  }
+
+  .settings-cancel-btn:hover {
+    background: rgba(41, 35, 29, 0.95);
+  }
+
   .chip-base {
     display: inline-flex;
     align-items: center;
@@ -695,6 +769,21 @@ a:focus-visible {
       left: auto;
       max-width: none;
       z-index: auto;
+    }
+  }
+}
+
+@media (max-width: 639px) {
+  @layer components {
+    .delete-account-btn,
+    .settings-delete-btn,
+    .settings-cancel-btn {
+      width: 100%;
+    }
+
+    .settings-danger-modal {
+      width: calc(100vw - 32px);
+      padding: 26px;
     }
   }
 }

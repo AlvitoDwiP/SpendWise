@@ -85,9 +85,9 @@ export function GuestDashboardPreview() {
           </section>
           <MobileRecentTransactions
             emptyActionHref="/login"
-            emptyActionLabel="Masuk"
-            emptyDescription="Masuk untuk mulai mencatat pemasukan dan pengeluaran."
-            emptyTitle="Belum ada transaksi"
+            emptyActionLabel="Sign In"
+            emptyDescription="Sign in to start tracking your income and expenses."
+            emptyTitle="No transactions yet"
             onDeleteTransaction={() => undefined}
             onEditTransaction={() => undefined}
             seeAllHref="/login"
@@ -163,9 +163,9 @@ export function GuestDashboardPreview() {
             />
             <RecentTransactionsCard
               emptyActionHref="/login"
-              emptyActionLabel="Masuk"
-              emptyDescription="Masuk untuk mulai mencatat pemasukan dan pengeluaran."
-              emptyTitle="Belum ada transaksi"
+              emptyActionLabel="Sign In"
+              emptyDescription="Sign in to start tracking your income and expenses."
+              emptyTitle="No transactions yet"
               onDeleteTransaction={() => undefined}
               onEditTransaction={() => undefined}
               seeAllHref="/login"

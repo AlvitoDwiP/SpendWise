@@ -10,7 +10,9 @@ import (
 func RegisterUserRoutes(router *gin.RouterGroup, db *gorm.DB) {
 	userHandler := handlers.NewUserHandler(db)
 
+	router.DELETE("/account", userHandler.DeleteMe)
 	router.GET("/me", userHandler.GetMe)
+	router.DELETE("/me", userHandler.DeleteMe)
 	router.PUT("/me", userHandler.UpdateProfile)
 	router.PUT("/me/photo", userHandler.UpdateProfilePhoto)
 	router.PUT("/me/password", userHandler.ChangePassword)

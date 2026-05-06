@@ -30,19 +30,19 @@ export function RegisterForm({
     <section className="auth-modal-content p-7 sm:p-9">
       <div className="mb-8 pr-10">
         <p className="auth-kicker">SpendWise</p>
-        <h1 className="auth-modal-title mt-3">Buat akun SpendWise</h1>
+        <h1 className="auth-modal-title mt-3">Create your SpendWise account</h1>
         <p className="auth-modal-description mt-3">
-          Mulai catat transaksi dan pantau kondisi finansial Anda dari satu tempat.
+          Start tracking transactions and monitoring your finances in one place.
         </p>
       </div>
 
       <button className="auth-social-btn mb-5 w-full" disabled type="button">
-        Daftar dengan Google
+        Continue with Google
       </button>
 
       <div className="auth-divider">
         <span />
-        <span>ATAU</span>
+        <span>OR</span>
         <span />
       </div>
 
@@ -54,7 +54,7 @@ export function RegisterForm({
             id="name"
             name="name"
             onChange={(event) => onNameChange(event.target.value)}
-            placeholder="Nama"
+            placeholder="Name"
             type="text"
             value={name}
           />
@@ -67,7 +67,7 @@ export function RegisterForm({
             id="email"
             name="email"
             onChange={(event) => onEmailChange(event.target.value)}
-            placeholder="Alamat email"
+            placeholder="Email address"
             type="email"
             value={email}
           />
@@ -80,7 +80,7 @@ export function RegisterForm({
             id="password"
             name="password"
             onChange={(event) => onPasswordChange(event.target.value)}
-            placeholder="Kata sandi"
+            placeholder="Password"
             type="password"
             value={password}
           />
@@ -97,14 +97,14 @@ export function RegisterForm({
           disabled={isSubmitting}
           type="submit"
         >
-          {isSubmitting ? "Memproses..." : "Daftar"}
+          {isSubmitting ? "Processing..." : "Register"}
         </button>
       </form>
 
       <p className="mt-6 text-center font-sans text-sm text-[var(--text-secondary)]">
-        Sudah punya akun?{" "}
+        Already have an account?{" "}
         <Link className="font-semibold text-[var(--accent-cream)]" href="/login">
-          Masuk
+          Sign In
         </Link>
       </p>
     </section>

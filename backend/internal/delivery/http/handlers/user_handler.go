@@ -91,6 +91,31 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 	utils.SuccessResponse(c, http.StatusOK, "Profile updated successfully", dto.ToUserResponse(user))
 }
 
+func (h *UserHandler) DeleteMe(c *gin.Context) {
+	userID, ok := utils.GetUserIDFromContext(c)
+	if !ok {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "You must be logged in to delete your account")
+		return
+	}
+
+	currentUser, err := services.GetCurrentUser(h.DB, userID)
+	if err != nil {
+		utils.ErrorResponse(c, userStatusFromError(err), "Failed to delete account")
+		return
+	}
+
+	if err := services.DeleteCurrentUser(h.DB, userID); err != nil {
+		utils.ErrorResponse(c, userStatusFromError(err), "failed to delete account")
+		return
+	}
+
+	if currentUser.ProfilePhotoURL != nil {
+		removeOldProfilePhotoIfInternal(*currentUser.ProfilePhotoURL)
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "Account deleted successfully", nil)
+}
+
 func (h *UserHandler) UpdateProfilePhoto(c *gin.Context) {
 	userID, ok := utils.GetUserIDFromContext(c)
 	if !ok {

@@ -40,6 +40,12 @@ export async function resetUserData(): Promise<void> {
   });
 }
 
+export async function deleteAccount(): Promise<void> {
+  await apiRequest<ApiSuccessResponse<null>>(API_ENDPOINTS.profile.deleteAccount, {
+    method: "DELETE",
+  });
+}
+
 export async function uploadProfilePhoto(file: File): Promise<User> {
   const formData = new FormData();
   formData.append("photo", file);

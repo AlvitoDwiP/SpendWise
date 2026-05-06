@@ -148,7 +148,7 @@ export function AddTransactionModal({ onClose, onCreated }: AddTransactionModalP
         "Hasil scan hanya suggestion. Cek kembali sebelum menyimpan.",
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal memindai receipt.");
+      setError(err instanceof Error ? err.message : "Failed to scan receipt.");
     } finally {
       setIsScanning(false);
     }

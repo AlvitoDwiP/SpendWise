@@ -146,7 +146,7 @@ export function DashboardDrawer({
                   }}
                   type="button"
                 >
-                  Masuk untuk menggunakan fitur ini
+                  Sign in to use this feature
                 </button>
               )}
             </div>

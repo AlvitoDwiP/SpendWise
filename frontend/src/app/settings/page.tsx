@@ -18,6 +18,7 @@ import {
 } from "@/features/settings/components/SettingsStates";
 import {
   changePassword,
+  deleteAccount,
   getMe,
   resetUserData,
   uploadProfilePhoto,
@@ -179,6 +180,18 @@ export default function SettingsPage() {
     }
   }
 
+  async function handleDeleteAccount(): Promise<void> {
+    try {
+      await deleteAccount();
+      logout();
+      router.replace("/dashboard");
+    } catch (err) {
+      throw err instanceof Error
+        ? err
+        : new Error("Failed to delete account. Please try again.");
+    }
+  }
+
   if (isLoading) {
     return <SettingsLoadingState />;
   }
@@ -249,7 +262,7 @@ export default function SettingsPage() {
             />
 
             <div className="pt-2 md:pt-3">
-              <SettingsDangerZone onReset={handleResetData} />
+              <SettingsDangerZone onDeleteAccount={handleDeleteAccount} onReset={handleResetData} />
             </div>
           </div>
         </div>

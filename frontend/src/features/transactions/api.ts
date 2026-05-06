@@ -89,7 +89,7 @@ export async function scanReceipt(file: File): Promise<ReceiptScanSuggestion> {
       throw new Error(message || "Sesi Anda berakhir. Silakan login ulang.");
     }
     if (response.status === 500) {
-      throw new Error("Gagal memproses scan receipt. Coba lagi sebentar.");
+      throw new Error("Failed to process receipt scan. Please try again shortly.");
     }
     if (response.status === 400) {
       throw new Error(message || "File receipt tidak valid.");
